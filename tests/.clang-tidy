@@ -1,0 +1,8 @@
+InheritParentConfig: true
+
+Checks: >
+  -readability-magic-numbers
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: true

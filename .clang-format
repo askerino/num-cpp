@@ -1,0 +1,9 @@
+BasedOnStyle: LLVM
+ColumnLimit: 100
+UseTab: Never
+IndentWidth: 4
+PointerAlignment: Left
+AlwaysBreakTemplateDeclarations: Yes
+RequiresClausePosition: OwnLine
+IncludeBlocks: Regroup
+SortIncludes: CaseInsensitive

@@ -1,0 +1,2 @@
+add_executable(solve_linear_system solve_linear_system.cpp)
+target_link_libraries(solve_linear_system PRIVATE num num_project_options)

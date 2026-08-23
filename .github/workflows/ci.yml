@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Linux / Clang 21 / Format
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run clang-format
+        shell: bash
+        run: |
+          mapfile -t sources < <(
+            find include tests examples -type f \( -name '*.hpp' -o -name '*.cpp' \) -print
+          )
+          clang-format-21 --dry-run --Werror "${sources[@]}"
+
+  tidy:
+    name: Linux / Clang 21 / Tidy
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          -DCMAKE_CXX_COMPILER=clang++-21
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DNUM_BUILD_EXAMPLES=ON
+
+      - name: Run clang-tidy
+        run: >-
+          run-clang-tidy-21
+          -p build
+          -j "$(nproc)"
+          -clang-tidy-binary clang-tidy-21
+          -warnings-as-errors='*'
+          '/tests/.*\.cpp$'
+          '/examples/.*\.cpp$'
+
+  build-and-test:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux / Clang 21 / Release
+            os: ubuntu-26.04
+            configure_args: -DCMAKE_CXX_COMPILER=clang++-21 -DCMAKE_BUILD_TYPE=Release
+            build_config: Release
+          - name: Linux / GCC 15 / Release
+            os: ubuntu-26.04
+            configure_args: -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_BUILD_TYPE=Release
+            build_config: Release
+          - name: Windows / MSVC 2026 / Release
+            os: windows-2025-vs2026
+            configure_args: ""
+            build_config: Release
+          - name: macOS 26 / AppleClang / ARM64 / Release
+            os: macos-26
+            configure_args: -DCMAKE_BUILD_TYPE=Release
+            build_config: Release
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -DBUILD_TESTING=ON
+          -DNUM_BUILD_EXAMPLES=ON
+          ${{ matrix.configure_args }}
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_config }} --parallel
+
+      - name: Test
+        run: ctest --test-dir build --build-config ${{ matrix.build_config }} --output-on-failure
+
+  sanitizers:
+    name: Linux / Clang 21 / Debug / ASan + UBSan
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_CXX_COMPILER=clang++-21
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DNUM_ENABLE_SANITIZERS=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --test-dir build --output-on-failure
+
+  coverage:
+    name: Linux / Clang 21 / Debug / Coverage
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_CXX_COMPILER=clang++-21
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DNUM_ENABLE_COVERAGE=ON
+
+      - name: Test and generate coverage report
+        run: cmake --build build --target coverage --parallel
