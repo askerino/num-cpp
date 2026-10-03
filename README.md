@@ -196,11 +196,16 @@ cmake --build build/clang-coverage --target coverage
 
 ### フォーマット
 
-`clang-format` 21を使用します。設定は`.clang-format`を参照してください。
+`clang-format` 21を使用します。設定は[`.clang-format`][clang-format-config]を参照してください。
+
+[clang-format-config]: https://github.com/askerino/num-cpp/blob/main/.clang-format
 
 ### 静的解析
 
-`clang-tidy` 21を使用します。設定は`.clang-tidy`と`tests/.clang-tidy`を参照してください。
+`clang-tidy` 21を使用します。設定は[`.clang-tidy`][clang-tidy-config]と[`tests/.clang-tidy`][clang-tidy-tests-config]を参照してください。
+
+[clang-tidy-config]: https://github.com/askerino/num-cpp/blob/main/.clang-tidy
+[clang-tidy-tests-config]: https://github.com/askerino/num-cpp/blob/main/tests/.clang-tidy
 
 ### APIドキュメントの生成
 
