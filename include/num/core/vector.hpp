@@ -11,6 +11,10 @@
 namespace num {
 
 /// @defgroup core Core
+/// @brief Vectors, matrices, and basic operations.
+///
+/// Formulas are written in plain text with 0-based indices to match the code, e.g. `a_ij` for the
+/// element in row `i` and column `j`, and `sum_i` for a sum over all `i`.
 /// @{
 
 /// @brief A dynamically sized vector of floating-point values.
@@ -56,8 +60,8 @@ class Vector {
     /// @throws std::invalid_argument If the vectors have different sizes.
     Vector& operator+=(const Vector& rhs) {
         require_same_size(rhs);
-        for (std::size_t index = 0; index < size(); ++index) {
-            data_[index] += rhs[index];
+        for (std::size_t i = 0; i < size(); ++i) {
+            data_[i] += rhs[i];
         }
         return *this;
     }
@@ -65,8 +69,8 @@ class Vector {
     /// @throws std::invalid_argument If the vectors have different sizes.
     Vector& operator-=(const Vector& rhs) {
         require_same_size(rhs);
-        for (std::size_t index = 0; index < size(); ++index) {
-            data_[index] -= rhs[index];
+        for (std::size_t i = 0; i < size(); ++i) {
+            data_[i] -= rhs[i];
         }
         return *this;
     }
@@ -117,16 +121,23 @@ class Vector {
         return vector;
     }
 
+    /// @brief Returns the dot product of this vector `x` and @p rhs `y`.
+    ///
+    /// `dot(x, y) = sum_i x_i * y_i`
+    ///
     /// @throws std::invalid_argument If the vectors have different sizes.
     [[nodiscard]] T dot(const Vector& rhs) const {
         require_same_size(rhs);
         T result{};
-        for (std::size_t index = 0; index < size(); ++index) {
-            result += data_[index] * rhs[index];
+        for (std::size_t i = 0; i < size(); ++i) {
+            result += data_[i] * rhs[i];
         }
         return result;
     }
 
+    /// @brief Returns the L1 norm.
+    ///
+    /// `||x||_1 = sum_i |x_i|`
     [[nodiscard]] T norm_l1() const {
         T result{};
         for (const auto element : data_) {
@@ -135,15 +146,23 @@ class Vector {
         return result;
     }
 
+    /// @brief Returns the L2 norm.
+    ///
+    /// `||x||_2 = sqrt(sum_i x_i^2)`
+    ///
+    /// @note Squaring the elements may overflow for very large values or underflow for very small
+    /// values.
     [[nodiscard]] T norm_l2() const {
-        T result{};
-        // Use std::hypot to avoid overflow/underflow when squaring large or small values.
+        T sum_of_squares{};
         for (const auto element : data_) {
-            result = std::hypot(result, element);
+            sum_of_squares += element * element;
         }
-        return result;
+        return std::sqrt(sum_of_squares);
     }
 
+    /// @brief Returns the infinity norm.
+    ///
+    /// `||x||_inf = max_i |x_i|`
     [[nodiscard]] T norm_infinity() const {
         T result{};
         for (const auto element : data_) {
