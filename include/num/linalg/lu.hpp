@@ -16,6 +16,10 @@
 namespace num::linalg {
 
 /// @defgroup linalg Linear algebra
+/// @brief Linear algebra algorithms.
+///
+/// Formulas are written in plain text with 0-based indices to match the code, e.g. `a_ij` for the
+/// element in row `i` and column `j`, and `sum_i` for a sum over all `i`.
 
 /// @defgroup lu LU factorization
 /// @ingroup linalg
@@ -46,63 +50,80 @@ void require_rhs_size(std::size_t system_size, const Vector<T>& rhs) {
     }
 }
 
+// Solves Ly = b for lower-triangular L, from the top row down:
+// y_i = (b_i - sum_{j<i} l_ij * y_j) / l_ii
 template <std::floating_point T>
 [[nodiscard]] Vector<T> forward_substitution(const Matrix<T>& lower, const Vector<T>& rhs) {
-    const std::size_t system_size = lower.rows();
-    Vector<T> result(system_size);
+    const std::size_t n = lower.rows();
+    Vector<T> y(n);
 
-    for (std::size_t row = 0; row < system_size; ++row) {
+    for (std::size_t i = 0; i < n; ++i) {
         T sum{};
-        for (std::size_t column = 0; column < row; ++column) {
-            sum += lower(row, column) * result[column];
+        for (std::size_t j = 0; j < i; ++j) {
+            sum += lower(i, j) * y[j];
         }
-        result[row] = (rhs[row] - sum) / lower(row, row);
+        y[i] = (rhs[i] - sum) / lower(i, i);
     }
 
-    return result;
+    return y;
 }
 
+// Solves Ux = y for upper-triangular U, from the bottom row up:
+// x_i = (y_i - sum_{j>i} u_ij * x_j) / u_ii
 template <std::floating_point T>
 [[nodiscard]] Vector<T> backward_substitution(const Matrix<T>& upper, const Vector<T>& rhs) {
-    const std::size_t system_size = upper.rows();
-    Vector<T> result(system_size);
+    const std::size_t n = upper.rows();
+    Vector<T> x(n);
 
-    for (std::size_t row = system_size; row > 0;) {
-        --row;
+    for (std::size_t i = n; i > 0;) {
+        --i;
         T sum{};
-        for (std::size_t column = row + 1; column < system_size; ++column) {
-            sum += upper(row, column) * result[column];
+        for (std::size_t j = i + 1; j < n; ++j) {
+            sum += upper(i, j) * x[j];
         }
-        result[row] = (rhs[row] - sum) / upper(row, row);
+        x[i] = (rhs[i] - sum) / upper(i, i);
     }
 
-    return result;
+    return x;
 }
 
+// Since PA = LU, Ax = b becomes L(Ux) = Pb, so solve Ly = Pb and then Ux = y.
 template <std::floating_point T>
 [[nodiscard]] Vector<T> solve_factorized(const LuFactorization<T>& factorization,
                                          const Vector<T>& rhs) {
-    const std::size_t system_size = factorization.lower.rows();
-    Vector<T> permuted_rhs(system_size);
-    for (std::size_t index = 0; index < system_size; ++index) {
-        permuted_rhs[index] = rhs[factorization.permutation[index]];
+    const std::size_t n = factorization.lower.rows();
+    Vector<T> permuted_rhs(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        permuted_rhs[i] = rhs[factorization.permutation[i]];
     }
 
-    const Vector<T> forward_solution = forward_substitution(factorization.lower, permuted_rhs);
-    return backward_substitution(factorization.upper, forward_solution);
+    const Vector<T> y = forward_substitution(factorization.lower, permuted_rhs);
+    return backward_substitution(factorization.upper, y);
 }
 
 } // namespace detail
 
 /// @brief Computes an LU factorization of @p matrix with partial pivoting.
+///
+/// Starting from `U = A` and `P = I`, for each column `k`:
+/// 1. Choose the pivot row `r >= k` with the largest `|u_rk|`,
+///    and swap rows `k` and `r` of `U`, `L`, and `P`.
+///    If `u_rk = 0`, the matrix is singular.
+/// 2. Set `l_kk = 1`.
+/// 3. For each row `i > k`, set `l_ik = u_ik / u_kk`,
+///    then subtract `l_ik` times row `k` from row `i` of `U`:
+///    `u_ij -= l_ik * u_kj` for each column `j >= k`.
+///
+/// The result satisfies `PA = LU`.
+///
 /// @return The factorization, or an error if @p matrix is singular or contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
 /// @note Only exactly zero pivots are reported as singular; near-singular matrices are not
 /// detected.
 template <std::floating_point T>
 [[nodiscard]] std::expected<LuFactorization<T>, Error> lu_factorize(const Matrix<T>& matrix) {
-    const std::size_t system_size = matrix.rows();
-    if (system_size == 0 || system_size != matrix.cols()) {
+    const std::size_t n = matrix.rows();
+    if (n == 0 || n != matrix.cols()) {
         throw std::invalid_argument(std::format("matrix must be non-empty and square: got {}x{}",
                                                 matrix.rows(), matrix.cols()));
     }
@@ -111,24 +132,23 @@ template <std::floating_point T>
         return std::unexpected(Error::non_finite_input);
     }
 
-    Matrix<T> lower(system_size, system_size);
+    Matrix<T> lower(n, n);
     Matrix<T> upper = matrix;
-    std::vector<std::size_t> permutation(system_size);
-    for (std::size_t index = 0; index < system_size; ++index) {
-        lower(index, index) = T{1};
-        permutation[index] = index;
+    std::vector<std::size_t> permutation(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        permutation[i] = i;
     }
     std::size_t row_swaps{};
 
-    for (std::size_t pivot_index = 0; pivot_index < system_size; ++pivot_index) {
-        // Select the entry with the largest absolute value on or below the diagonal as the pivot.
-        std::size_t pivot_row = pivot_index;
-        T pivot_magnitude = std::abs(upper(pivot_index, pivot_index));
-        for (std::size_t row = pivot_index + 1; row < system_size; ++row) {
-            const T candidate_magnitude = std::abs(upper(row, pivot_index));
+    for (std::size_t k = 0; k < n; ++k) {
+        // Step 1: choose the pivot row and swap rows.
+        std::size_t pivot_row = k;
+        T pivot_magnitude = std::abs(upper(k, k));
+        for (std::size_t i = k + 1; i < n; ++i) {
+            const T candidate_magnitude = std::abs(upper(i, k));
             if (candidate_magnitude > pivot_magnitude) {
                 pivot_magnitude = candidate_magnitude;
-                pivot_row = row;
+                pivot_row = i;
             }
         }
 
@@ -136,26 +156,26 @@ template <std::floating_point T>
             return std::unexpected(Error::singular_matrix);
         }
 
-        if (pivot_row != pivot_index) {
-            for (std::size_t swap_column = 0; swap_column < system_size; ++swap_column) {
-                std::swap(upper(pivot_index, swap_column), upper(pivot_row, swap_column));
+        if (pivot_row != k) {
+            // Columns k and beyond of L are still zero, so entire rows can be swapped.
+            for (std::size_t j = 0; j < n; ++j) {
+                std::swap(upper(k, j), upper(pivot_row, j));
+                std::swap(lower(k, j), lower(pivot_row, j));
             }
-            for (std::size_t swap_column = 0; swap_column < pivot_index; ++swap_column) {
-                std::swap(lower(pivot_index, swap_column), lower(pivot_row, swap_column));
-            }
-            std::swap(permutation[pivot_index], permutation[pivot_row]);
+            std::swap(permutation[k], permutation[pivot_row]);
             ++row_swaps;
         }
 
-        for (std::size_t row = pivot_index + 1; row < system_size; ++row) {
-            // Eliminate U(row, pivot_index) and store the multiplier in L.
-            const T elimination_factor = upper(row, pivot_index) / upper(pivot_index, pivot_index);
-            lower(row, pivot_index) = elimination_factor;
-            upper(row, pivot_index) = T{};
-            for (std::size_t trailing_column = pivot_index + 1; trailing_column < system_size;
-                 ++trailing_column) {
-                upper(row, trailing_column) -=
-                    elimination_factor * upper(pivot_index, trailing_column);
+        // Steps 2 and 3: build column k of L and eliminate below the pivot.
+        lower(k, k) = T{1};
+        for (std::size_t i = k + 1; i < n; ++i) {
+            const T elimination_factor = upper(i, k) / upper(k, k);
+            lower(i, k) = elimination_factor;
+            // u_ik - l_ik * u_kk is zero in exact arithmetic, so set it directly to avoid rounding
+            // error.
+            upper(i, k) = T{};
+            for (std::size_t j = k + 1; j < n; ++j) {
+                upper(i, j) -= elimination_factor * upper(k, j);
             }
         }
     }
@@ -163,11 +183,15 @@ template <std::floating_point T>
     return LuFactorization<T>{lower, upper, permutation, row_swaps};
 }
 
+/// @brief Computes the determinant of the factorized matrix.
+///
+/// Since `PA = LU`, `det(L) = 1`, and each row swap flips the sign of the determinant,
+/// `det(A) = (-1)^s * prod_i u_ii`, where `s` is the number of row swaps.
 template <std::floating_point T>
 [[nodiscard]] T determinant(const LuFactorization<T>& factorization) {
     T result = factorization.row_swaps % 2 == 0 ? T{1} : T{-1};
-    for (std::size_t index = 0; index < factorization.upper.rows(); ++index) {
-        result *= factorization.upper(index, index);
+    for (std::size_t i = 0; i < factorization.upper.rows(); ++i) {
+        result *= factorization.upper(i, i);
     }
     return result;
 }
@@ -188,7 +212,11 @@ template <std::floating_point T>
     return determinant(*factorization);
 }
 
-/// @brief Solves `Ax = @p rhs` using @p factorization.
+/// @brief Solves `Ax = b` for @p rhs `b` using @p factorization.
+///
+/// Since `PA = LU`, it solves `Ly = Pb` by forward substitution and then `Ux = y` by backward
+/// substitution.
+///
 /// @return The solution, or an error if @p rhs contains a non-finite value.
 /// @throws std::invalid_argument If @p rhs has an incompatible size.
 template <std::floating_point T>
@@ -219,18 +247,21 @@ template <std::floating_point T>
     return lu_solve(*factorization, rhs);
 }
 
+/// @brief Computes the inverse of the factorized matrix.
+///
+/// Column `j` of `A^-1` is the solution of `Ax = e_j`, where `e_j` is the `j`-th standard basis
+/// vector.
 template <std::floating_point T>
 [[nodiscard]] Matrix<T> inverse(const LuFactorization<T>& factorization) {
-    const std::size_t system_size = factorization.lower.rows();
-    Matrix<T> result(system_size, system_size);
+    const std::size_t n = factorization.lower.rows();
+    Matrix<T> result(n, n);
 
-    for (std::size_t column = 0; column < system_size; ++column) {
-        // Solve Ax = e_i to compute column i of the inverse.
-        Vector<T> basis_vector(system_size);
-        basis_vector[column] = T{1};
+    for (std::size_t j = 0; j < n; ++j) {
+        Vector<T> basis_vector(n);
+        basis_vector[j] = T{1};
         const Vector<T> inverse_column = detail::solve_factorized(factorization, basis_vector);
-        for (std::size_t row = 0; row < system_size; ++row) {
-            result(row, column) = inverse_column[row];
+        for (std::size_t i = 0; i < n; ++i) {
+            result(i, j) = inverse_column[i];
         }
     }
 

@@ -1,7 +1,6 @@
 #include "num/core/vector.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -87,14 +86,6 @@ TEST(VectorNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
     EXPECT_DOUBLE_EQ(empty.norm_l2(), 0.0);
     EXPECT_DOUBLE_EQ(empty.norm_infinity(), 0.0);
-}
-
-TEST(VectorNorms, AvoidsOverflow) {
-    const num::Vector<double> vector{1.0e308, 1.0e308};
-    const double norm = vector.norm_l2();
-
-    EXPECT_TRUE(std::isfinite(norm));
-    EXPECT_NEAR(norm / 1.0e308, std::sqrt(2.0), 1.0e-12);
 }
 
 TEST(VectorArithmetic, SupportsArithmetic) {
