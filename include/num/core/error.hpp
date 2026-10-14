@@ -5,6 +5,12 @@
 
 namespace num {
 
+/// @namespace num
+/// @brief Root namespace of the library.
+///
+/// Formulas are written in plain text with 0-based indices to match the code, e.g. `a_ij` for the
+/// element in row `i` and column `j`, and `sum_i` for a sum over all `i`.
+
 /// @addtogroup core
 /// @{
 
