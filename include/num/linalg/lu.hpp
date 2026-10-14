@@ -15,13 +15,16 @@
 
 namespace num::linalg {
 
+/// @namespace num::linalg
+/// @brief Algorithms operating on vectors and matrices.
+
 /// @defgroup linalg Linear algebra
-/// @brief Linear algebra algorithms.
+/// @brief Algorithms operating on vectors and matrices.
 ///
-/// Formulas are written in plain text with 0-based indices to match the code, e.g. `a_ij` for the
-/// element in row `i` and column `j`, and `sum_i` for a sum over all `i`.
+/// See @ref num for the notation used in formulas.
 
 /// @defgroup lu LU factorization
+/// @brief LU factorization and solvers for linear systems.
 /// @ingroup linalg
 /// @{
 

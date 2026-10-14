@@ -13,8 +13,7 @@ namespace num {
 /// @defgroup core Core
 /// @brief Vectors, matrices, and basic operations.
 ///
-/// Formulas are written in plain text with 0-based indices to match the code, e.g. `a_ij` for the
-/// element in row `i` and column `j`, and `sum_i` for a sum over all `i`.
+/// See @ref num for the notation used in formulas.
 /// @{
 
 /// @brief A dynamically sized vector of floating-point values.

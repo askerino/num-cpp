@@ -118,7 +118,7 @@ if (NUM_BUILD_DOCS)
     FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR NUM_DOXYGEN_AWESOME_CSS_DIR)
 
     set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/docs")
-    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/README.md")
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/docs/mainpage.md")
     set(DOXYGEN_STRIP_FROM_INC_PATH "${PROJECT_SOURCE_DIR}/include")
     set(DOXYGEN_EXCLUDE_SYMBOLS "*::detail")
     set(DOXYGEN_EXTRACT_ALL YES)
@@ -139,7 +139,7 @@ if (NUM_BUILD_DOCS)
     set(DOXYGEN_HTML_COLORSTYLE LIGHT)
 
     doxygen_add_docs(docs
-            include "${PROJECT_SOURCE_DIR}/README.md"
+            include "${PROJECT_SOURCE_DIR}/docs/mainpage.md"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             COMMENT "Generating API documentation"
     )
