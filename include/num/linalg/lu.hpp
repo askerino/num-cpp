@@ -15,26 +15,18 @@
 
 namespace num::linalg {
 
-/// @namespace num::linalg
-/// @brief Algorithms operating on vectors and matrices.
-
 /// @defgroup linalg Linear algebra
-/// @brief Algorithms operating on vectors and matrices.
-///
-/// See @ref num for the notation used in formulas.
 
 /// @defgroup lu LU factorization
-/// @brief LU factorization and solvers for linear systems.
 /// @ingroup linalg
 /// @{
 
-/// @brief Stores an LU factorization satisfying `PA = LU`.
 template <std::floating_point T>
 struct LuFactorization {
-    Matrix<T> lower;                      ///< Unit lower-triangular factor `L`.
-    Matrix<T> upper;                      ///< Upper-triangular factor `U`.
+    Matrix<T> lower;
+    Matrix<T> upper;
     std::vector<std::size_t> permutation; ///< Row `i` of `PA` is row `permutation[i]` of `A`.
-    std::size_t row_swaps{};              ///< Number of row exchanges.
+    std::size_t row_swaps{};
 };
 
 namespace detail {
@@ -53,8 +45,6 @@ void require_rhs_size(std::size_t system_size, const Vector<T>& rhs) {
     }
 }
 
-// Solves Ly = b for lower-triangular L, from the top row down:
-// y_i = (b_i - sum_{j<i} l_ij * y_j) / l_ii
 template <std::floating_point T>
 [[nodiscard]] Vector<T> forward_substitution(const Matrix<T>& lower, const Vector<T>& rhs) {
     const std::size_t n = lower.rows();
@@ -71,8 +61,6 @@ template <std::floating_point T>
     return y;
 }
 
-// Solves Ux = y for upper-triangular U, from the bottom row up:
-// x_i = (y_i - sum_{j>i} u_ij * x_j) / u_ii
 template <std::floating_point T>
 [[nodiscard]] Vector<T> backward_substitution(const Matrix<T>& upper, const Vector<T>& rhs) {
     const std::size_t n = upper.rows();
@@ -90,7 +78,6 @@ template <std::floating_point T>
     return x;
 }
 
-// Since PA = LU, Ax = b becomes L(Ux) = Pb, so solve Ly = Pb and then Ux = y.
 template <std::floating_point T>
 [[nodiscard]] Vector<T> solve_factorized(const LuFactorization<T>& factorization,
                                          const Vector<T>& rhs) {
@@ -106,23 +93,8 @@ template <std::floating_point T>
 
 } // namespace detail
 
-/// @brief Computes an LU factorization of @p matrix with partial pivoting.
-///
-/// Starting from `U = A` and `P = I`, for each column `k`:
-/// 1. Choose the pivot row `r >= k` with the largest `|u_rk|`,
-///    and swap rows `k` and `r` of `U`, `L`, and `P`.
-///    If `u_rk = 0`, the matrix is singular.
-/// 2. Set `l_kk = 1`.
-/// 3. For each row `i > k`, set `l_ik = u_ik / u_kk`,
-///    then subtract `l_ik` times row `k` from row `i` of `U`:
-///    `u_ij -= l_ik * u_kj` for each column `j >= k`.
-///
-/// The result satisfies `PA = LU`.
-///
 /// @return The factorization, or an error if @p matrix is singular or contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
-/// @note Only exactly zero pivots are reported as singular; near-singular matrices are not
-/// detected.
 template <std::floating_point T>
 [[nodiscard]] std::expected<LuFactorization<T>, Error> lu_factorize(const Matrix<T>& matrix) {
     const std::size_t n = matrix.rows();
@@ -144,7 +116,7 @@ template <std::floating_point T>
     std::size_t row_swaps{};
 
     for (std::size_t k = 0; k < n; ++k) {
-        // Step 1: choose the pivot row and swap rows.
+        // Choose the pivot row.
         std::size_t pivot_row = k;
         T pivot_magnitude = std::abs(upper(k, k));
         for (std::size_t i = k + 1; i < n; ++i) {
@@ -169,13 +141,11 @@ template <std::floating_point T>
             ++row_swaps;
         }
 
-        // Steps 2 and 3: build column k of L and eliminate below the pivot.
+        // Build column k of L and update U by eliminating entries below the pivot.
         lower(k, k) = T{1};
         for (std::size_t i = k + 1; i < n; ++i) {
             const T elimination_factor = upper(i, k) / upper(k, k);
             lower(i, k) = elimination_factor;
-            // u_ik - l_ik * u_kk is zero in exact arithmetic, so set it directly to avoid rounding
-            // error.
             upper(i, k) = T{};
             for (std::size_t j = k + 1; j < n; ++j) {
                 upper(i, j) -= elimination_factor * upper(k, j);
@@ -186,10 +156,6 @@ template <std::floating_point T>
     return LuFactorization<T>{lower, upper, permutation, row_swaps};
 }
 
-/// @brief Computes the determinant of the factorized matrix.
-///
-/// Since `PA = LU`, `det(L) = 1`, and each row swap flips the sign of the determinant,
-/// `det(A) = (-1)^s * prod_i u_ii`, where `s` is the number of row swaps.
 template <std::floating_point T>
 [[nodiscard]] T determinant(const LuFactorization<T>& factorization) {
     T result = factorization.row_swaps % 2 == 0 ? T{1} : T{-1};
@@ -199,7 +165,6 @@ template <std::floating_point T>
     return result;
 }
 
-/// @brief Computes the determinant of @p matrix using LU factorization.
 /// @return The determinant, which is zero if @p matrix is singular, or an error if @p matrix
 /// contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
@@ -215,11 +180,6 @@ template <std::floating_point T>
     return determinant(*factorization);
 }
 
-/// @brief Solves `Ax = b` for @p rhs `b` using @p factorization.
-///
-/// Since `PA = LU`, it solves `Ly = Pb` by forward substitution and then `Ux = y` by backward
-/// substitution.
-///
 /// @return The solution, or an error if @p rhs contains a non-finite value.
 /// @throws std::invalid_argument If @p rhs has an incompatible size.
 template <std::floating_point T>
@@ -234,7 +194,6 @@ template <std::floating_point T>
     return detail::solve_factorized(factorization, rhs);
 }
 
-/// @brief Solves `Ax = b` by computing an LU factorization of @p matrix.
 /// @return The solution, or an error if @p matrix is singular or either input contains a non-finite
 /// value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square, or if @p rhs has an
@@ -250,10 +209,6 @@ template <std::floating_point T>
     return lu_solve(*factorization, rhs);
 }
 
-/// @brief Computes the inverse of the factorized matrix.
-///
-/// Column `j` of `A^-1` is the solution of `Ax = e_j`, where `e_j` is the `j`-th standard basis
-/// vector.
 template <std::floating_point T>
 [[nodiscard]] Matrix<T> inverse(const LuFactorization<T>& factorization) {
     const std::size_t n = factorization.lower.rows();
@@ -271,7 +226,6 @@ template <std::floating_point T>
     return result;
 }
 
-/// @brief Computes the inverse of @p matrix using LU factorization.
 /// @return The inverse, or an error if @p matrix is singular or contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
 template <std::floating_point T>

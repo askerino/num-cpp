@@ -16,15 +16,11 @@ namespace num {
 /// @addtogroup core
 /// @{
 
-/// @brief A dynamically sized matrix of floating-point values.
-///
-/// @note Storage is contiguous and row-major, and operator() does not perform bounds checking.
 template <std::floating_point T>
 class Matrix {
   public:
     Matrix() = default;
 
-    /// @brief Creates a zero-initialized @p rows x @p cols matrix.
     /// @throws std::length_error If the requested matrix is too large.
     Matrix(std::size_t rows, std::size_t cols)
         : rows_(rows), cols_(cols), data_(checked_element_count(rows, cols), T{}) {}
@@ -160,10 +156,6 @@ class Matrix {
         return matrix;
     }
 
-    /// @brief Returns the matrix product `C = AB` of @p lhs `A` and @p rhs `B`.
-    ///
-    /// `c_ij = sum_k a_ik * b_kj`
-    ///
     /// @throws std::invalid_argument If the inner dimensions do not match.
     /// @throws std::length_error If the resulting matrix is too large.
     [[nodiscard]] friend Matrix operator*(const Matrix& lhs, const Matrix& rhs) {
@@ -185,10 +177,6 @@ class Matrix {
         return result;
     }
 
-    /// @brief Returns the product `y = Ax` of @p lhs `A` and @p rhs `x`.
-    ///
-    /// `y_i = sum_j a_ij * x_j`
-    ///
     /// @throws std::invalid_argument If the matrix column count and vector size differ.
     [[nodiscard]] friend Vector<T> operator*(const Matrix& lhs, const Vector<T>& rhs) {
         if (lhs.cols_ != rhs.size()) {
@@ -208,9 +196,6 @@ class Matrix {
         return result;
     }
 
-    /// @brief Returns the induced L1 norm, the maximum absolute column sum.
-    ///
-    /// `||A||_1 = max_j sum_i |a_ij|`
     [[nodiscard]] T norm_l1() const {
         T result{};
         for (std::size_t j = 0; j < cols_; ++j) {
@@ -225,9 +210,6 @@ class Matrix {
         return result;
     }
 
-    /// @brief Returns the induced infinity norm, the maximum absolute row sum.
-    ///
-    /// `||A||_inf = max_i sum_j |a_ij|`
     [[nodiscard]] T norm_infinity() const {
         T result{};
         for (std::size_t i = 0; i < rows_; ++i) {
@@ -242,10 +224,6 @@ class Matrix {
         return result;
     }
 
-    /// @brief Returns the Frobenius norm.
-    ///
-    /// `||A||_F = sqrt(sum_i sum_j a_ij^2)`
-    ///
     /// @note Squaring the elements may overflow for very large values or underflow for very small
     /// values.
     [[nodiscard]] T norm_frobenius() const {
@@ -256,9 +234,6 @@ class Matrix {
         return std::sqrt(sum_of_squares);
     }
 
-    /// @brief Returns the transpose.
-    ///
-    /// `(A^T)_ij = a_ji`
     [[nodiscard]] Matrix transpose() const {
         Matrix result(cols_, rows_);
         for (std::size_t i = 0; i < cols_; ++i) {
