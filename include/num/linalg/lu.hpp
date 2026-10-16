@@ -111,28 +111,15 @@ template <std::floating_point T>
     return LuFactorization<T>{lower, upper, permutation, row_swaps};
 }
 
+/// @note The product of the diagonal entries may overflow or underflow for large matrices; on
+/// underflow the result is indistinguishable from a singular determinant.
 template <std::floating_point T>
-[[nodiscard]] T determinant(const LuFactorization<T>& factorization) {
+[[nodiscard]] T lu_determinant(const LuFactorization<T>& factorization) {
     T result = factorization.row_swaps % 2 == 0 ? T{1} : T{-1};
     for (std::size_t i = 0; i < factorization.upper.rows(); ++i) {
         result *= factorization.upper(i, i);
     }
     return result;
-}
-
-/// @return The determinant, which is zero if @p matrix is singular, or an error if @p matrix
-/// contains a non-finite value.
-/// @throws std::invalid_argument If @p matrix is empty or non-square.
-template <std::floating_point T>
-[[nodiscard]] std::expected<T, Error> determinant(const Matrix<T>& matrix) {
-    const auto factorization = lu_factorize(matrix);
-    if (!factorization) {
-        if (factorization.error() == Error::singular_matrix) {
-            return T{};
-        }
-        return std::unexpected(factorization.error());
-    }
-    return determinant(*factorization);
 }
 
 /// @return The solution, or an error if @p rhs contains a non-finite value.
@@ -149,23 +136,8 @@ template <std::floating_point T>
     return detail::solve_factorized(factorization, rhs);
 }
 
-/// @return The solution, or an error if @p matrix is singular or either input contains a non-finite
-/// value.
-/// @throws std::invalid_argument If @p matrix is empty or non-square, or if @p rhs has an
-/// incompatible size.
 template <std::floating_point T>
-[[nodiscard]] std::expected<Vector<T>, Error> lu_solve(const Matrix<T>& matrix,
-                                                       const Vector<T>& rhs) {
-    detail::require_rhs_size(matrix.rows(), rhs);
-    const auto factorization = lu_factorize(matrix);
-    if (!factorization) {
-        return std::unexpected(factorization.error());
-    }
-    return lu_solve(*factorization, rhs);
-}
-
-template <std::floating_point T>
-[[nodiscard]] Matrix<T> inverse(const LuFactorization<T>& factorization) {
+[[nodiscard]] Matrix<T> lu_inverse(const LuFactorization<T>& factorization) {
     const std::size_t n = factorization.lower.rows();
     Matrix<T> result(n, n);
 
@@ -179,17 +151,6 @@ template <std::floating_point T>
     }
 
     return result;
-}
-
-/// @return The inverse, or an error if @p matrix is singular or contains a non-finite value.
-/// @throws std::invalid_argument If @p matrix is empty or non-square.
-template <std::floating_point T>
-[[nodiscard]] std::expected<Matrix<T>, Error> inverse(const Matrix<T>& matrix) {
-    const auto factorization = lu_factorize(matrix);
-    if (!factorization) {
-        return std::unexpected(factorization.error());
-    }
-    return inverse(*factorization);
 }
 
 /// @}
