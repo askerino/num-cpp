@@ -86,7 +86,13 @@ int main() {
     };
     const num::Vector<double> b{8.0, 6.0, 5.0};
 
-    const auto x = num::linalg::lu_solve(a, b);
+    const auto factorization = num::linalg::lu_factorize(a);
+    if (!factorization) {
+        std::println(stderr, "error: {}", num::error_message(factorization.error()));
+        return 1;
+    }
+
+    const auto x = num::linalg::lu_solve(*factorization, b);
     if (!x) {
         std::println(stderr, "error: {}", num::error_message(x.error()));
         return 1;

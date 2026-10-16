@@ -78,93 +78,34 @@ TEST(LuFactorize, ThrowsOnInvalidInputs) {
                  std::invalid_argument);
 }
 
-TEST(Determinant, Computes) {
+TEST(LuDeterminant, Computes) {
     const num::Matrix<double> no_swap{{2.0, 1.0}, {0.0, 3.0}};
     const num::Matrix<double> one_swap{{0.0, 1.0}, {1.0, 0.0}};
     const auto no_swap_factorization = num::linalg::lu_factorize(no_swap).value();
     const auto one_swap_factorization = num::linalg::lu_factorize(one_swap).value();
 
-    EXPECT_DOUBLE_EQ(num::linalg::determinant(no_swap).value(), 6.0);
-    EXPECT_DOUBLE_EQ(num::linalg::determinant(one_swap).value(), -1.0);
-    EXPECT_DOUBLE_EQ(num::linalg::determinant(no_swap_factorization), 6.0);
-    EXPECT_DOUBLE_EQ(num::linalg::determinant(one_swap_factorization), -1.0);
+    EXPECT_DOUBLE_EQ(num::linalg::lu_determinant(no_swap_factorization), 6.0);
+    EXPECT_DOUBLE_EQ(num::linalg::lu_determinant(one_swap_factorization), -1.0);
 }
 
-TEST(Determinant, ReturnsZeroForSingularMatrix) {
-    const num::Matrix<double> singular{{1.0, 2.0}, {2.0, 4.0}};
-
-    EXPECT_DOUBLE_EQ(num::linalg::determinant(singular).value(), 0.0);
-}
-
-TEST(Determinant, ReportsNonFiniteInput) {
-    const num::Matrix<double> non_finite{{1.0, std::numeric_limits<double>::infinity()},
-                                         {0.0, 1.0}};
-    const auto determinant = num::linalg::determinant(non_finite);
-
-    ASSERT_FALSE(determinant.has_value());
-    EXPECT_EQ(determinant.error(), num::Error::non_finite_input);
-}
-
-TEST(Determinant, ThrowsOnInvalidInputs) {
-    const num::Matrix<double> empty;
-    const num::Matrix<double> non_square(2, 3);
-
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::determinant(empty),
-                 std::invalid_argument);
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::determinant(non_square),
-                 std::invalid_argument);
-}
-
-TEST(LuSolve, SolvesFromFactorization) {
-    const num::Matrix<double> matrix{{2.0, 3.0}, {4.0, 5.0}};
-    const num::Vector<double> rhs{8.0, 14.0};
-    const auto factorization = num::linalg::lu_factorize(matrix).value();
-    const auto solution = num::linalg::lu_solve(factorization, rhs).value();
-
-    EXPECT_NEAR(solution[0], 1.0, double_tolerance);
-    EXPECT_NEAR(solution[1], 2.0, double_tolerance);
-}
-
-TEST(LuSolve, SolvesFromMatrix) {
+TEST(LuSolve, Solves) {
     const num::Matrix<double> matrix{{3.0, 2.0, -1.0}, {2.0, -2.0, 4.0}, {-1.0, 0.5, -1.0}};
     const num::Vector<double> rhs{1.0, -2.0, 0.0};
-    const auto solution = num::linalg::lu_solve(matrix, rhs).value();
+    const auto factorization = num::linalg::lu_factorize(matrix).value();
+    const auto solution = num::linalg::lu_solve(factorization, rhs).value();
 
     EXPECT_NEAR(solution[0], 1.0, double_tolerance);
     EXPECT_NEAR(solution[1], -2.0, double_tolerance);
     EXPECT_NEAR(solution[2], -2.0, double_tolerance);
 }
 
-TEST(LuSolve, ReportsNonFiniteMatrixInput) {
-    const num::Matrix<double> non_finite_matrix{{1.0, std::numeric_limits<double>::infinity()},
-                                                {0.0, 1.0}};
-    const num::Vector<double> rhs{1.0, 2.0};
-    const auto solution = num::linalg::lu_solve(non_finite_matrix, rhs);
+TEST(LuSolve, ReportsNonFiniteRhsInput) {
+    const auto factorization = num::linalg::lu_factorize(num::Matrix<double>::identity(2)).value();
+    const num::Vector<double> non_finite_rhs{1.0, std::numeric_limits<double>::quiet_NaN()};
+    const auto solution = num::linalg::lu_solve(factorization, non_finite_rhs);
 
     ASSERT_FALSE(solution.has_value());
     EXPECT_EQ(solution.error(), num::Error::non_finite_input);
-}
-
-TEST(LuSolve, ReportsNonFiniteRhsInput) {
-    const auto matrix = num::Matrix<double>::identity(2);
-    const auto factorization = num::linalg::lu_factorize(matrix).value();
-    const num::Vector<double> non_finite_rhs{1.0, std::numeric_limits<double>::quiet_NaN()};
-    const auto solution_from_factorization = num::linalg::lu_solve(factorization, non_finite_rhs);
-    const auto solution_from_matrix = num::linalg::lu_solve(matrix, non_finite_rhs);
-
-    ASSERT_FALSE(solution_from_factorization.has_value());
-    EXPECT_EQ(solution_from_factorization.error(), num::Error::non_finite_input);
-    ASSERT_FALSE(solution_from_matrix.has_value());
-    EXPECT_EQ(solution_from_matrix.error(), num::Error::non_finite_input);
-}
-
-TEST(LuSolve, ReportsSingularMatrix) {
-    const num::Matrix<double> singular_matrix{{1.0, 2.0}, {2.0, 4.0}};
-    const num::Vector<double> rhs{1.0, 2.0};
-    const auto solution = num::linalg::lu_solve(singular_matrix, rhs);
-
-    ASSERT_FALSE(solution.has_value());
-    EXPECT_EQ(solution.error(), num::Error::singular_matrix);
 }
 
 TEST(LuSolve, ThrowsOnDimensionMismatch) {
@@ -174,26 +115,12 @@ TEST(LuSolve, ThrowsOnDimensionMismatch) {
 
     EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::lu_solve(factorization, rhs),
                  std::invalid_argument);
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::lu_solve(matrix, rhs),
-                 std::invalid_argument);
 }
 
-TEST(LuSolve, ThrowsOnInvalidInputs) {
-    const num::Matrix<double> non_square_matrix(2, 3);
-    const num::Matrix<double> empty_matrix;
-    const num::Vector<double> rhs{1.0, 2.0};
-    const num::Vector<double> empty_rhs;
-
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::lu_solve(non_square_matrix, rhs),
-                 std::invalid_argument);
-    EXPECT_THROW([[maybe_unused]] const auto result =
-                     num::linalg::lu_solve(empty_matrix, empty_rhs),
-                 std::invalid_argument);
-}
-
-TEST(Inverse, ComputesFromFactorization) {
+TEST(LuInverse, Computes) {
     const num::Matrix<double> matrix{{0.0, 2.0}, {1.0, 3.0}};
-    const auto inverse = num::linalg::inverse(num::linalg::lu_factorize(matrix).value());
+    const auto factorization = num::linalg::lu_factorize(matrix).value();
+    const auto inverse = num::linalg::lu_inverse(factorization);
     const auto matrix_times_inverse = matrix * inverse;
 
     for (std::size_t row = 0; row < matrix.rows(); ++row) {
@@ -202,44 +129,4 @@ TEST(Inverse, ComputesFromFactorization) {
             EXPECT_NEAR(matrix_times_inverse(row, column), expected, double_tolerance);
         }
     }
-}
-
-TEST(Inverse, ComputesFromMatrix) {
-    const num::Matrix<double> matrix{{0.0, 2.0}, {1.0, 3.0}};
-    const auto inverse = num::linalg::inverse(matrix).value();
-    const auto matrix_times_inverse = matrix * inverse;
-
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
-        for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            const double expected = (row == column) ? 1.0 : 0.0;
-            EXPECT_NEAR(matrix_times_inverse(row, column), expected, double_tolerance);
-        }
-    }
-}
-
-TEST(Inverse, ReportsNonFiniteInput) {
-    const num::Matrix<double> non_finite{{1.0, std::numeric_limits<double>::infinity()},
-                                         {0.0, 1.0}};
-    const auto inverse = num::linalg::inverse(non_finite);
-
-    ASSERT_FALSE(inverse.has_value());
-    EXPECT_EQ(inverse.error(), num::Error::non_finite_input);
-}
-
-TEST(Inverse, ReportsSingularMatrix) {
-    const num::Matrix<double> singular{{1.0, 2.0}, {2.0, 4.0}};
-    const auto inverse = num::linalg::inverse(singular);
-
-    ASSERT_FALSE(inverse.has_value());
-    EXPECT_EQ(inverse.error(), num::Error::singular_matrix);
-}
-
-TEST(Inverse, ThrowsOnInvalidInputs) {
-    const num::Matrix<double> empty;
-    const num::Matrix<double> non_square(2, 3);
-
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::inverse(empty),
-                 std::invalid_argument);
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::inverse(non_square),
-                 std::invalid_argument);
 }
