@@ -3,6 +3,8 @@
 #include "num/core/error.hpp"
 #include "num/core/matrix.hpp"
 #include "num/core/vector.hpp"
+#include "num/linalg/detail/triangular.hpp"
+#include "num/linalg/detail/validation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -30,53 +32,6 @@ struct LuFactorization {
 };
 
 namespace detail {
-
-template <typename Range>
-    requires std::floating_point<std::ranges::range_value_t<Range>>
-[[nodiscard]] bool all_finite(const Range& values) {
-    return std::ranges::all_of(values, [](const auto value) { return std::isfinite(value); });
-}
-
-template <std::floating_point T>
-void require_rhs_size(std::size_t system_size, const Vector<T>& rhs) {
-    if (rhs.size() != system_size) {
-        throw std::invalid_argument(std::format(
-            "LU solve size mismatch: system size {}, rhs size {}", system_size, rhs.size()));
-    }
-}
-
-template <std::floating_point T>
-[[nodiscard]] Vector<T> forward_substitution(const Matrix<T>& lower, const Vector<T>& rhs) {
-    const std::size_t n = lower.rows();
-    Vector<T> y(n);
-
-    for (std::size_t i = 0; i < n; ++i) {
-        T sum{};
-        for (std::size_t j = 0; j < i; ++j) {
-            sum += lower(i, j) * y[j];
-        }
-        y[i] = (rhs[i] - sum) / lower(i, i);
-    }
-
-    return y;
-}
-
-template <std::floating_point T>
-[[nodiscard]] Vector<T> backward_substitution(const Matrix<T>& upper, const Vector<T>& rhs) {
-    const std::size_t n = upper.rows();
-    Vector<T> x(n);
-
-    for (std::size_t i = n; i > 0;) {
-        --i;
-        T sum{};
-        for (std::size_t j = i + 1; j < n; ++j) {
-            sum += upper(i, j) * x[j];
-        }
-        x[i] = (rhs[i] - sum) / upper(i, i);
-    }
-
-    return x;
-}
 
 template <std::floating_point T>
 [[nodiscard]] Vector<T> solve_factorized(const LuFactorization<T>& factorization,
