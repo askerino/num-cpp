@@ -1,5 +1,6 @@
 #pragma once
 
+#include "num/core/matrix.hpp"
 #include "num/core/vector.hpp"
 
 #include <algorithm>
@@ -16,6 +17,14 @@ template <typename Range>
     requires std::floating_point<std::ranges::range_value_t<Range>>
 [[nodiscard]] bool all_finite(const Range& values) {
     return std::ranges::all_of(values, [](const auto value) { return std::isfinite(value); });
+}
+
+template <std::floating_point T>
+void require_square_matrix(const Matrix<T>& matrix) {
+    if (matrix.rows() == 0 || matrix.rows() != matrix.cols()) {
+        throw std::invalid_argument(std::format("matrix must be non-empty and square: got {}x{}",
+                                                matrix.rows(), matrix.cols()));
+    }
 }
 
 template <std::floating_point T>

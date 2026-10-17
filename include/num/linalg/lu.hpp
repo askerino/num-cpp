@@ -11,8 +11,6 @@
 #include <concepts>
 #include <cstddef>
 #include <expected>
-#include <format>
-#include <stdexcept>
 #include <vector>
 
 namespace num::linalg {
@@ -52,16 +50,13 @@ template <std::floating_point T>
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
 template <std::floating_point T>
 [[nodiscard]] std::expected<LuFactorization<T>, Error> lu_factorize(const Matrix<T>& matrix) {
-    const std::size_t n = matrix.rows();
-    if (n == 0 || n != matrix.cols()) {
-        throw std::invalid_argument(std::format("matrix must be non-empty and square: got {}x{}",
-                                                matrix.rows(), matrix.cols()));
-    }
+    detail::require_square_matrix(matrix);
 
     if (!detail::all_finite(matrix)) {
         return std::unexpected(Error::non_finite_input);
     }
 
+    const std::size_t n = matrix.rows();
     Matrix<T> lower(n, n);
     Matrix<T> upper = matrix;
     std::vector<std::size_t> permutation(n);
@@ -71,7 +66,6 @@ template <std::floating_point T>
     std::size_t row_swaps{};
 
     for (std::size_t k = 0; k < n; ++k) {
-        // Choose the pivot row.
         std::size_t pivot_row = k;
         T pivot_magnitude = std::abs(upper(k, k));
         for (std::size_t i = k + 1; i < n; ++i) {
@@ -87,7 +81,6 @@ template <std::floating_point T>
         }
 
         if (pivot_row != k) {
-            // Columns k and beyond of L are still zero, so entire rows can be swapped.
             for (std::size_t j = 0; j < n; ++j) {
                 std::swap(upper(k, j), upper(pivot_row, j));
                 std::swap(lower(k, j), lower(pivot_row, j));
@@ -96,7 +89,6 @@ template <std::floating_point T>
             ++row_swaps;
         }
 
-        // Build column k of L and update U by eliminating entries below the pivot.
         lower(k, k) = T{1};
         for (std::size_t i = k + 1; i < n; ++i) {
             const T elimination_factor = upper(i, k) / upper(k, k);
