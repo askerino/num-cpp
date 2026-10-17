@@ -221,3 +221,15 @@ TEST(MatrixTransformations, ComputesTransposes) {
     EXPECT_DOUBLE_EQ(transposed(2, 0), 3.0);
     EXPECT_DOUBLE_EQ(transposed(2, 1), 6.0);
 }
+
+TEST(MatrixSymmetry, DetectsSymmetricMatrices) {
+    const num::Matrix<double> symmetric{{1.0, 2.0, 3.0}, {2.0, 4.0, 5.0}, {3.0, 5.0, 6.0}};
+    const num::Matrix<double> asymmetric{{1.0, 2.0}, {3.0, 4.0}};
+    const num::Matrix<double> non_square{{1.0, 2.0, 3.0}, {2.0, 4.0, 5.0}};
+
+    EXPECT_TRUE(symmetric.is_symmetric());
+    EXPECT_TRUE(num::Matrix<double>::identity(3).is_symmetric());
+    EXPECT_TRUE(num::Matrix<double>{}.is_symmetric());
+    EXPECT_FALSE(asymmetric.is_symmetric());
+    EXPECT_FALSE(non_square.is_symmetric());
+}
