@@ -3,9 +3,11 @@
 #include <gtest/gtest.h>
 
 TEST(ErrorMessage, ReturnsMessages) {
-    EXPECT_EQ(num::error_message(num::Error::singular_matrix), "matrix is singular");
     EXPECT_EQ(num::error_message(num::Error::non_finite_input),
               "input contains a non-finite value");
+    EXPECT_EQ(num::error_message(num::Error::singular_matrix), "matrix is singular");
+    EXPECT_EQ(num::error_message(num::Error::non_positive_definite),
+              "matrix is not positive definite");
 }
 
 TEST(ErrorMessage, ReturnsFallbackForUnknownValue) {

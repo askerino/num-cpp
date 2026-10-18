@@ -247,6 +247,23 @@ class Matrix {
         return result;
     }
 
+    /// @note The empty (0x0) matrix is symmetric, as the symmetry condition is vacuously satisfied.
+    /// @note The comparison is exact, so a matrix computed with floating-point operations may not
+    /// be symmetric even when it is symmetric in exact arithmetic.
+    [[nodiscard]] bool is_symmetric() const {
+        if (rows_ != cols_) {
+            return false;
+        }
+        for (std::size_t i = 0; i < rows_; ++i) {
+            for (std::size_t j = i + 1; j < cols_; ++j) {
+                if ((*this)(i, j) != (*this)(j, i)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
   private:
     [[nodiscard]] static std::size_t checked_element_count(std::size_t rows, std::size_t cols) {
         if (rows != 0 && cols > std::numeric_limits<std::size_t>::max() / rows) {

@@ -19,6 +19,7 @@ add_executable(num_tests
         core/test_matrix.cpp
         core/test_vector.cpp
         linalg/test_lu.cpp
+        linalg/test_cholesky.cpp
 )
 
 target_link_libraries(num_tests PRIVATE
