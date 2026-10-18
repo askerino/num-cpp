@@ -78,7 +78,7 @@ include(FetchContent)
 FetchContent_Declare(
         num-cpp
         GIT_REPOSITORY https://github.com/askerino/num-cpp.git
-        GIT_TAG v0.1.0
+        GIT_TAG main
 )
 FetchContent_MakeAvailable(num-cpp)
 
