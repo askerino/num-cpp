@@ -193,21 +193,6 @@ TEST(MatrixArithmetic, MultipliesVector) {
     EXPECT_DOUBLE_EQ(result[1], -2.0);
 }
 
-TEST(MatrixArithmetic, ComputesTransposes) {
-    const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
-    const auto transposed = matrix.transpose();
-
-    EXPECT_EQ(transposed.rows(), 3);
-    EXPECT_EQ(transposed.cols(), 2);
-    EXPECT_EQ(transposed.size(), 6);
-    EXPECT_DOUBLE_EQ(transposed(0, 0), 1.0);
-    EXPECT_DOUBLE_EQ(transposed(0, 1), 4.0);
-    EXPECT_DOUBLE_EQ(transposed(1, 0), 2.0);
-    EXPECT_DOUBLE_EQ(transposed(1, 1), 5.0);
-    EXPECT_DOUBLE_EQ(transposed(2, 0), 3.0);
-    EXPECT_DOUBLE_EQ(transposed(2, 1), 6.0);
-}
-
 TEST(MatrixArithmetic, ThrowsOnDimensionMismatch) {
     const num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
     const num::Matrix<double> different_cols{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
@@ -220,4 +205,19 @@ TEST(MatrixArithmetic, ThrowsOnDimensionMismatch) {
     EXPECT_THROW(static_cast<void>(matrix - different_dimension), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(matrix * different_dimension), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(matrix * vector), std::invalid_argument);
+}
+
+TEST(MatrixTransformations, ComputesTransposes) {
+    const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+    const auto transposed = matrix.transpose();
+
+    EXPECT_EQ(transposed.rows(), 3);
+    EXPECT_EQ(transposed.cols(), 2);
+    EXPECT_EQ(transposed.size(), 6);
+    EXPECT_DOUBLE_EQ(transposed(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(transposed(0, 1), 4.0);
+    EXPECT_DOUBLE_EQ(transposed(1, 0), 2.0);
+    EXPECT_DOUBLE_EQ(transposed(1, 1), 5.0);
+    EXPECT_DOUBLE_EQ(transposed(2, 0), 3.0);
+    EXPECT_DOUBLE_EQ(transposed(2, 1), 6.0);
 }

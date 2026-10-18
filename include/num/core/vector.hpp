@@ -24,7 +24,10 @@ class Vector {
 
     [[nodiscard]] static Vector zeros(std::size_t element_count) { return Vector(element_count); }
 
+    /// @note Performs no bounds checking; use at() for a checked access.
     [[nodiscard]] T& operator[](std::size_t index) noexcept { return data_[index]; }
+
+    /// @note Performs no bounds checking; use at() for a checked access.
     [[nodiscard]] const T& operator[](std::size_t index) const noexcept { return data_[index]; }
 
     /// @throws std::out_of_range If @p index is out of bounds.

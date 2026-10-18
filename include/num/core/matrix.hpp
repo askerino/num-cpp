@@ -60,9 +60,12 @@ class Matrix {
         return result;
     }
 
+    /// @note Performs no bounds checking; use at() for a checked access.
     [[nodiscard]] T& operator()(std::size_t row, std::size_t column) noexcept {
         return data_[(row * cols_) + column];
     }
+
+    /// @note Performs no bounds checking; use at() for a checked access.
     [[nodiscard]] const T& operator()(std::size_t row, std::size_t column) const noexcept {
         return data_[(row * cols_) + column];
     }
