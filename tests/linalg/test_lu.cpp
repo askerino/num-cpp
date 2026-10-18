@@ -6,10 +6,19 @@
 
 namespace {
 constexpr double double_tolerance = 1e-12;
+
+// Matrix that requires a row swap at the first pivot.
+num::Matrix<double> pivot_matrix() { return {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 10.0}}; }
+
+// Matrix that requires no row swap.
+num::Matrix<double> no_swap_matrix() { return {{2.0, 1.0}, {0.0, 3.0}}; }
+
+// Matrix that requires exactly one row swap (det = -1).
+num::Matrix<double> one_swap_matrix() { return {{0.0, 1.0}, {1.0, 0.0}}; }
 } // namespace
 
 TEST(LuFactorize, SatisfiesPAEqualsLU) {
-    const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 10.0}};
+    const auto matrix = pivot_matrix();
     const auto factorization = num::linalg::lu_factorize(matrix).value();
     const auto lu_product = factorization.lower * factorization.upper;
 
@@ -23,7 +32,7 @@ TEST(LuFactorize, SatisfiesPAEqualsLU) {
 }
 
 TEST(LuFactorize, ReturnsTriangularFactors) {
-    const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 10.0}};
+    const auto matrix = pivot_matrix();
     const auto factorization = num::linalg::lu_factorize(matrix).value();
 
     for (std::size_t row = 0; row < matrix.rows(); ++row) {
@@ -38,8 +47,8 @@ TEST(LuFactorize, ReturnsTriangularFactors) {
 }
 
 TEST(LuFactorize, CountsRowSwaps) {
-    const num::Matrix<double> no_swap{{2.0, 1.0}, {0.0, 3.0}};
-    const num::Matrix<double> one_swap{{0.0, 1.0}, {1.0, 0.0}};
+    const auto no_swap = no_swap_matrix();
+    const auto one_swap = one_swap_matrix();
     const auto no_swap_factorization = num::linalg::lu_factorize(no_swap).value();
     const auto one_swap_factorization = num::linalg::lu_factorize(one_swap).value();
 
@@ -79,8 +88,8 @@ TEST(LuFactorize, ThrowsOnInvalidInputs) {
 }
 
 TEST(LuDeterminant, Computes) {
-    const num::Matrix<double> no_swap{{2.0, 1.0}, {0.0, 3.0}};
-    const num::Matrix<double> one_swap{{0.0, 1.0}, {1.0, 0.0}};
+    const auto no_swap = no_swap_matrix();
+    const auto one_swap = one_swap_matrix();
     const auto no_swap_factorization = num::linalg::lu_factorize(no_swap).value();
     const auto one_swap_factorization = num::linalg::lu_factorize(one_swap).value();
 
