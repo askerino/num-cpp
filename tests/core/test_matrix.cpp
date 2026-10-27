@@ -85,6 +85,45 @@ TEST(MatrixAccess, AccessesElements) {
     EXPECT_THROW(static_cast<void>(const_matrix.at(2, 2)), std::out_of_range);
 }
 
+TEST(MatrixAccess, ExtractsRowsAndColumns) {
+    const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+
+    const auto extracted_row = matrix.row(1);
+    ASSERT_EQ(extracted_row.size(), 3);
+    EXPECT_DOUBLE_EQ(extracted_row[0], 4.0);
+    EXPECT_DOUBLE_EQ(extracted_row[1], 5.0);
+    EXPECT_DOUBLE_EQ(extracted_row[2], 6.0);
+
+    const auto extracted_column = matrix.column(2);
+    ASSERT_EQ(extracted_column.size(), 2);
+    EXPECT_DOUBLE_EQ(extracted_column[0], 3.0);
+    EXPECT_DOUBLE_EQ(extracted_column[1], 6.0);
+
+    const num::Matrix<double> single{{7.0}};
+    EXPECT_DOUBLE_EQ(single.row(0)[0], 7.0);
+    EXPECT_DOUBLE_EQ(single.column(0)[0], 7.0);
+}
+
+TEST(MatrixAccess, ExtractsEmptyRowsAndColumns) {
+    const num::Matrix<double> no_rows(0, 3);
+    EXPECT_TRUE(no_rows.column(2).empty());
+
+    const num::Matrix<double> no_columns(3, 0);
+    EXPECT_TRUE(no_columns.row(2).empty());
+}
+
+TEST(MatrixAccess, ThrowsOnOutOfRangeRowOrColumn) {
+    const num::Matrix<double> matrix(2, 3);
+    EXPECT_THROW(static_cast<void>(matrix.row(2)), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(matrix.column(3)), std::out_of_range);
+
+    const num::Matrix<double> no_rows(0, 3);
+    EXPECT_THROW(static_cast<void>(no_rows.row(0)), std::out_of_range);
+
+    const num::Matrix<double> no_columns(3, 0);
+    EXPECT_THROW(static_cast<void>(no_columns.column(0)), std::out_of_range);
+}
+
 TEST(MatrixAccess, SupportsContainer) {
     num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
     const num::Matrix<double>& const_matrix = matrix;

@@ -82,6 +82,32 @@ class Matrix {
         return data_[(row * cols_) + column];
     }
 
+    /// @throws std::out_of_range If @p index is out of range.
+    [[nodiscard]] Vector<T> row(std::size_t index) const {
+        if (index >= rows_) {
+            throw std::out_of_range(std::format(
+                "matrix row index out of range: index {}, shape {}x{}", index, rows_, cols_));
+        }
+        Vector<T> result(cols_);
+        for (std::size_t j = 0; j < cols_; ++j) {
+            result[j] = (*this)(index, j);
+        }
+        return result;
+    }
+
+    /// @throws std::out_of_range If @p index is out of range.
+    [[nodiscard]] Vector<T> column(std::size_t index) const {
+        if (index >= cols_) {
+            throw std::out_of_range(std::format(
+                "matrix column index out of range: index {}, shape {}x{}", index, rows_, cols_));
+        }
+        Vector<T> result(rows_);
+        for (std::size_t i = 0; i < rows_; ++i) {
+            result[i] = (*this)(i, index);
+        }
+        return result;
+    }
+
     [[nodiscard]] T* data() noexcept { return data_.data(); }
     [[nodiscard]] const T* data() const noexcept { return data_.data(); }
 
