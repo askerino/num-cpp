@@ -8,6 +8,7 @@ TEST(ErrorMessage, ReturnsMessages) {
     EXPECT_EQ(num::error_message(num::Error::singular_matrix), "matrix is singular");
     EXPECT_EQ(num::error_message(num::Error::non_positive_definite),
               "matrix is not positive definite");
+    EXPECT_EQ(num::error_message(num::Error::rank_deficient), "matrix is rank deficient");
 }
 
 TEST(ErrorMessage, ReturnsFallbackForUnknownValue) {

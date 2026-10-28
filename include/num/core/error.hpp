@@ -12,6 +12,7 @@ enum class Error : std::uint8_t {
     non_finite_input,
     singular_matrix,
     non_positive_definite,
+    rank_deficient,
 };
 
 [[nodiscard]] constexpr std::string_view error_message(Error error) noexcept {
@@ -22,6 +23,8 @@ enum class Error : std::uint8_t {
         return "matrix is singular";
     case Error::non_positive_definite:
         return "matrix is not positive definite";
+    case Error::rank_deficient:
+        return "matrix is rank deficient";
     }
     return "unknown error";
 }
