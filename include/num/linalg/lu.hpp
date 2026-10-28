@@ -29,7 +29,7 @@ struct LuFactorization {
     std::size_t row_swaps{};
 };
 
-namespace detail {
+namespace detail::lu {
 
 template <std::floating_point T>
 [[nodiscard]] Vector<T> solve_factorized(const LuFactorization<T>& factorization,
@@ -44,7 +44,7 @@ template <std::floating_point T>
     return backward_substitution(factorization.upper, y);
 }
 
-} // namespace detail
+} // namespace detail::lu
 
 /// @return The factorization, or an error if @p matrix is singular or contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
@@ -125,7 +125,7 @@ template <std::floating_point T>
         return std::unexpected(Error::non_finite_input);
     }
 
-    return detail::solve_factorized(factorization, rhs);
+    return detail::lu::solve_factorized(factorization, rhs);
 }
 
 template <std::floating_point T>
@@ -136,7 +136,7 @@ template <std::floating_point T>
     for (std::size_t j = 0; j < n; ++j) {
         Vector<T> basis_vector(n);
         basis_vector[j] = T{1};
-        const Vector<T> inverse_column = detail::solve_factorized(factorization, basis_vector);
+        const Vector<T> inverse_column = detail::lu::solve_factorized(factorization, basis_vector);
         for (std::size_t i = 0; i < n; ++i) {
             result(i, j) = inverse_column[i];
         }
