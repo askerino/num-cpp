@@ -1,12 +1,11 @@
 #include "num/linalg/lu.hpp"
+#include "support/comparison.hpp"
 
 #include <gtest/gtest.h>
 #include <limits>
 #include <stdexcept>
 
 namespace {
-constexpr double double_tolerance = 1e-12;
-
 // Matrix that requires a row swap at the first pivot.
 num::Matrix<double> pivot_matrix() { return {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 10.0}}; }
 
@@ -26,7 +25,7 @@ TEST(LuFactorize, SatisfiesPAEqualsLU) {
     for (std::size_t row = 0; row < matrix.rows(); ++row) {
         for (std::size_t column = 0; column < matrix.cols(); ++column) {
             EXPECT_NEAR(lu_product(row, column), matrix(factorization.permutation[row], column),
-                        double_tolerance);
+                        num::test::tolerance);
         }
     }
 }
@@ -103,9 +102,7 @@ TEST(LuSolve, Solves) {
     const auto factorization = num::linalg::lu_factorize(matrix).value();
     const auto solution = num::linalg::lu_solve(factorization, rhs).value();
 
-    EXPECT_NEAR(solution[0], 1.0, double_tolerance);
-    EXPECT_NEAR(solution[1], -2.0, double_tolerance);
-    EXPECT_NEAR(solution[2], -2.0, double_tolerance);
+    num::test::expect_vector_near(solution, num::Vector<double>{1.0, -2.0, -2.0});
 }
 
 TEST(LuSolve, ReportsNonFiniteRhsInput) {
@@ -132,10 +129,6 @@ TEST(LuInverse, Computes) {
     const auto inverse = num::linalg::lu_inverse(factorization);
     const auto matrix_times_inverse = matrix * inverse;
 
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
-        for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            const double expected = (row == column) ? 1.0 : 0.0;
-            EXPECT_NEAR(matrix_times_inverse(row, column), expected, double_tolerance);
-        }
-    }
+    num::test::expect_matrix_near(matrix_times_inverse,
+                                  num::Matrix<double>::identity(matrix.rows()));
 }

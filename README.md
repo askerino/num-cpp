@@ -156,6 +156,7 @@ residual: 0.000e+00
 ├── tests/
 │   ├── core/
 │   ├── linalg/
+│   ├── support/
 │   └── CMakeLists.txt
 └── CMakeLists.txt
 ```
