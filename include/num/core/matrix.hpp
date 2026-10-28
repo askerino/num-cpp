@@ -253,14 +253,12 @@ class Matrix {
         return result;
     }
 
-    /// @note Squaring the elements may overflow for very large values or underflow for very small
-    /// values.
     [[nodiscard]] T norm_frobenius() const {
-        T sum_of_squares{};
+        T result{};
         for (const auto element : data_) {
-            sum_of_squares += element * element;
+            result = std::hypot(result, element);
         }
-        return std::sqrt(sum_of_squares);
+        return result;
     }
 
     [[nodiscard]] Matrix transpose() const {

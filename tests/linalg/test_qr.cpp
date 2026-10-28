@@ -75,6 +75,18 @@ TEST(QrFactorize, HandlesSingleElementMatrix) {
     EXPECT_DOUBLE_EQ(factorization.r(0, 0), 4.0);
 }
 
+TEST(QrFactorize, HandlesExtremeScales) {
+    const num::Matrix<double> tiny_matrix{{1e-200}};
+    const auto tiny_factorization = num::linalg::qr_factorize(tiny_matrix).value();
+    EXPECT_DOUBLE_EQ(tiny_factorization.q(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(tiny_factorization.r(0, 0), 1e-200);
+
+    const num::Matrix<double> huge_matrix{{1e200}};
+    const auto huge_factorization = num::linalg::qr_factorize(huge_matrix).value();
+    EXPECT_DOUBLE_EQ(huge_factorization.q(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(huge_factorization.r(0, 0), 1e200);
+}
+
 TEST(QrFactorize, ReportsNonFiniteInput) {
     const num::Matrix<double> non_finite{{1.0, std::numeric_limits<double>::infinity()},
                                          {0.0, 1.0}};
