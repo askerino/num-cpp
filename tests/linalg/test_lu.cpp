@@ -80,10 +80,8 @@ TEST(LuFactorize, ThrowsOnInvalidInputs) {
     const num::Matrix<double> empty;
     const num::Matrix<double> non_square(2, 3);
 
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::lu_factorize(empty),
-                 std::invalid_argument);
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::lu_factorize(non_square),
-                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(num::linalg::lu_factorize(empty)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(num::linalg::lu_factorize(non_square)), std::invalid_argument);
 }
 
 TEST(LuDeterminant, Computes) {
@@ -119,7 +117,7 @@ TEST(LuSolve, ThrowsOnDimensionMismatch) {
     const auto factorization = num::linalg::lu_factorize(matrix).value();
     const num::Vector<double> rhs{1.0};
 
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::lu_solve(factorization, rhs),
+    EXPECT_THROW(static_cast<void>(num::linalg::lu_solve(factorization, rhs)),
                  std::invalid_argument);
 }
 
