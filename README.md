@@ -142,7 +142,10 @@ residual: 0.000e+00
 
 詳しいサンプルコードは[`examples/solve_linear_system.cpp`][example]を参照してください。
 
+最小二乗の例は[`examples/least_squares.cpp`][least-squares-example]を参照してください。
+
 [example]: https://github.com/askerino/num-cpp/blob/main/examples/solve_linear_system.cpp
+[least-squares-example]: https://github.com/askerino/num-cpp/blob/main/examples/least_squares.cpp
 
 ## APIドキュメント
 
@@ -160,6 +163,7 @@ residual: 0.000e+00
 ├── cmake/
 ├── examples/
 │   ├── CMakeLists.txt
+│   ├── least_squares.cpp
 │   └── solve_linear_system.cpp
 ├── include/
 │   └── num/
@@ -190,7 +194,7 @@ cmake -S . -B build/clang-debug -G Ninja \
 cmake --build build/clang-debug
 ```
 
-サンプルは`build/clang-debug/examples/solve_linear_system`で実行できます。
+サンプルは`build/clang-debug/examples/`以下にビルドされます。
 
 #### ビルドオプション
 
