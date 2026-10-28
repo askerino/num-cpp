@@ -20,6 +20,7 @@ add_executable(num_tests
         core/test_vector.cpp
         linalg/test_lu.cpp
         linalg/test_cholesky.cpp
+        linalg/test_qr.cpp
 )
 
 target_include_directories(num_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
