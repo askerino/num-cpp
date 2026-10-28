@@ -80,9 +80,8 @@ TEST(CholeskyFactorize, ThrowsOnInvalidInputs) {
     const num::Matrix<double> empty;
     const num::Matrix<double> non_square(2, 3);
 
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::cholesky_factorize(empty),
-                 std::invalid_argument);
-    EXPECT_THROW([[maybe_unused]] const auto result = num::linalg::cholesky_factorize(non_square),
+    EXPECT_THROW(static_cast<void>(num::linalg::cholesky_factorize(empty)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(num::linalg::cholesky_factorize(non_square)),
                  std::invalid_argument);
 }
 
@@ -125,8 +124,7 @@ TEST(CholeskySolve, ThrowsOnDimensionMismatch) {
     const auto factorization = num::linalg::cholesky_factorize(spd_matrix()).value();
     const num::Vector<double> rhs{1.0};
 
-    EXPECT_THROW([[maybe_unused]] const auto result =
-                     num::linalg::cholesky_solve(factorization, rhs),
+    EXPECT_THROW(static_cast<void>(num::linalg::cholesky_solve(factorization, rhs)),
                  std::invalid_argument);
 }
 

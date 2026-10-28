@@ -4,5 +4,7 @@ Checks: >
   -readability-magic-numbers
 
 CheckOptions:
+  - key: bugprone-unused-return-value.AllowCastToVoid
+    value: true
   - key: readability-function-cognitive-complexity.IgnoreMacros
     value: true
