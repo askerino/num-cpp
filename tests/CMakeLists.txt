@@ -22,6 +22,8 @@ add_executable(num_tests
         linalg/test_cholesky.cpp
 )
 
+target_include_directories(num_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(num_tests PRIVATE
         num
         num_project_options

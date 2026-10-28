@@ -1,13 +1,12 @@
 #include "num/linalg/cholesky.hpp"
 #include "num/linalg/lu.hpp"
+#include "support/comparison.hpp"
 
 #include <gtest/gtest.h>
 #include <limits>
 #include <stdexcept>
 
 namespace {
-constexpr double double_tolerance = 1e-12;
-
 // Symmetric positive definite matrix with a known Cholesky factor (A = LLᵀ).
 num::Matrix<double> spd_matrix() {
     return {{4.0, 12.0, -16.0}, {12.0, 37.0, -43.0}, {-16.0, -43.0, 98.0}};
@@ -21,13 +20,8 @@ num::Matrix<double> expected_lower() {
 
 TEST(CholeskyFactorize, ComputesLowerFactor) {
     const auto factorization = num::linalg::cholesky_factorize(spd_matrix()).value();
-    const auto expected = expected_lower();
 
-    for (std::size_t row = 0; row < expected.rows(); ++row) {
-        for (std::size_t column = 0; column < expected.cols(); ++column) {
-            EXPECT_NEAR(factorization.lower(row, column), expected(row, column), double_tolerance);
-        }
-    }
+    num::test::expect_matrix_near(factorization.lower, expected_lower());
 }
 
 TEST(CholeskyFactorize, SatisfiesAEqualsLLt) {
@@ -35,11 +29,7 @@ TEST(CholeskyFactorize, SatisfiesAEqualsLLt) {
     const auto factorization = num::linalg::cholesky_factorize(matrix).value();
     const auto product = factorization.lower * factorization.lower.transpose();
 
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
-        for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            EXPECT_NEAR(product(row, column), matrix(row, column), double_tolerance);
-        }
-    }
+    num::test::expect_matrix_near(product, matrix);
 }
 
 TEST(CholeskyFactorize, ReturnsLowerTriangular) {
@@ -57,10 +47,7 @@ TEST(CholeskyFactorize, UsesOnlyLowerTriangle) {
     const auto factorization = num::linalg::cholesky_factorize(not_symmetric).value();
     const auto product = factorization.lower * factorization.lower.transpose();
 
-    EXPECT_NEAR(product(0, 0), 4.0, double_tolerance);
-    EXPECT_NEAR(product(0, 1), 1.0, double_tolerance);
-    EXPECT_NEAR(product(1, 0), 1.0, double_tolerance);
-    EXPECT_NEAR(product(1, 1), 4.0, double_tolerance);
+    num::test::expect_matrix_near(product, num::Matrix<double>{{4.0, 1.0}, {1.0, 4.0}});
 }
 
 TEST(CholeskyFactorize, ReportsNonFiniteInput) {
@@ -111,9 +98,7 @@ TEST(CholeskySolve, Solves) {
     const auto factorization = num::linalg::cholesky_factorize(matrix).value();
     const auto solution = num::linalg::cholesky_solve(factorization, rhs).value();
 
-    EXPECT_NEAR(solution[0], 1.0, double_tolerance);
-    EXPECT_NEAR(solution[1], 2.0, double_tolerance);
-    EXPECT_NEAR(solution[2], 3.0, double_tolerance);
+    num::test::expect_vector_near(solution, num::Vector<double>{1.0, 2.0, 3.0});
 }
 
 TEST(CholeskySolve, MatchesLuSolve) {
@@ -124,9 +109,7 @@ TEST(CholeskySolve, MatchesLuSolve) {
     const auto lu_factorization = num::linalg::lu_factorize(matrix).value();
     const auto lu_solution = num::linalg::lu_solve(lu_factorization, rhs).value();
 
-    for (std::size_t i = 0; i < rhs.size(); ++i) {
-        EXPECT_NEAR(cholesky_solution[i], lu_solution[i], double_tolerance);
-    }
+    num::test::expect_vector_near(cholesky_solution, lu_solution);
 }
 
 TEST(CholeskySolve, ReportsNonFiniteRhsInput) {
@@ -153,10 +136,6 @@ TEST(CholeskyInverse, Computes) {
         num::linalg::cholesky_inverse(num::linalg::cholesky_factorize(matrix).value());
     const auto matrix_times_inverse = matrix * inverse;
 
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
-        for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            const double expected = (row == column) ? 1.0 : 0.0;
-            EXPECT_NEAR(matrix_times_inverse(row, column), expected, double_tolerance);
-        }
-    }
+    num::test::expect_matrix_near(matrix_times_inverse,
+                                  num::Matrix<double>::identity(matrix.rows()));
 }
