@@ -4,6 +4,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
+#include <numbers>
 #include <stdexcept>
 
 template <typename T>
@@ -153,7 +154,7 @@ TEST(MatrixNorms, ComputesNorms) {
 
     EXPECT_DOUBLE_EQ(matrix.norm_l1(), 9.0);
     EXPECT_DOUBLE_EQ(matrix.norm_infinity(), 15.0);
-    EXPECT_DOUBLE_EQ(matrix.norm_frobenius(), std::sqrt(91.0));
+    EXPECT_NEAR(matrix.norm_frobenius(), std::sqrt(91.0), 1e-12);
 }
 
 TEST(MatrixNorms, ComputesEmptyNorms) {
@@ -164,6 +165,14 @@ TEST(MatrixNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
     EXPECT_DOUBLE_EQ(no_rows.norm_infinity(), 0.0);
     EXPECT_DOUBLE_EQ(no_columns.norm_frobenius(), 0.0);
+}
+
+TEST(MatrixNorms, AvoidsOverflowAndUnderflow) {
+    const num::Matrix<double> huge_matrix{{1e200, 1e200}};
+    const num::Matrix<double> tiny_matrix{{1e-200, 1e-200}};
+
+    EXPECT_NEAR(huge_matrix.norm_frobenius(), 1e200 * std::numbers::sqrt2, 1e190);
+    EXPECT_NEAR(tiny_matrix.norm_frobenius(), 1e-200 * std::numbers::sqrt2, 1e-210);
 }
 
 TEST(MatrixArithmetic, SupportsArithmetic) {

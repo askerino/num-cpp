@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <numbers>
 #include <stdexcept>
 
 template <typename T>
@@ -86,6 +87,15 @@ TEST(VectorNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
     EXPECT_DOUBLE_EQ(empty.norm_l2(), 0.0);
     EXPECT_DOUBLE_EQ(empty.norm_infinity(), 0.0);
+}
+
+TEST(VectorNorms, AvoidsOverflowAndUnderflow) {
+    const num::Vector<double> huge_vector{1e200, 1e200};
+    const num::Vector<double> tiny_vector{1e-200, 1e-200};
+
+    EXPECT_NEAR(huge_vector.norm_l2(), 1e200 * std::numbers::sqrt2, 1e190);
+    EXPECT_NEAR(tiny_vector.norm_l2(), 1e-200 * std::numbers::sqrt2, 1e-210);
+    EXPECT_DOUBLE_EQ(num::Vector<double>{1e308}.norm_l2(), 1e308);
 }
 
 TEST(VectorArithmetic, SupportsArithmetic) {
