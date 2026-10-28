@@ -22,7 +22,7 @@ struct CholeskyFactorization {
     Matrix<T> lower;
 };
 
-namespace detail {
+namespace detail::cholesky {
 
 template <std::floating_point T>
 [[nodiscard]] Vector<T> solve_factorized(const CholeskyFactorization<T>& factorization,
@@ -31,7 +31,7 @@ template <std::floating_point T>
     return backward_substitution(factorization.lower.transpose(), y);
 }
 
-} // namespace detail
+} // namespace detail::cholesky
 
 /// @return The factorization, or an error if @p matrix is not positive definite or contains a
 /// non-finite value.
@@ -92,7 +92,7 @@ cholesky_solve(const CholeskyFactorization<T>& factorization, const Vector<T>& r
         return std::unexpected(Error::non_finite_input);
     }
 
-    return detail::solve_factorized(factorization, rhs);
+    return detail::cholesky::solve_factorized(factorization, rhs);
 }
 
 template <std::floating_point T>
@@ -103,7 +103,8 @@ template <std::floating_point T>
     for (std::size_t j = 0; j < n; ++j) {
         Vector<T> basis_vector(n);
         basis_vector[j] = T{1};
-        const Vector<T> inverse_column = detail::solve_factorized(factorization, basis_vector);
+        const Vector<T> inverse_column =
+            detail::cholesky::solve_factorized(factorization, basis_vector);
         for (std::size_t i = 0; i < n; ++i) {
             result(i, j) = inverse_column[i];
         }
