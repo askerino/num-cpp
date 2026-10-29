@@ -13,12 +13,12 @@ int main() {
     };
     const num::Vector<double> rhs{8.0, 6.0, 5.0};
 
-    const auto factorization = num::linalg::lu_factorize(matrix);
-    if (!factorization) {
-        std::println(stderr, "error: {}", num::error_message(factorization.error()));
+    const auto decomposition = num::linalg::lu_decompose(matrix);
+    if (!decomposition) {
+        std::println(stderr, "error: {}", num::error_message(decomposition.error()));
         return 1;
     }
-    const auto solution = num::linalg::lu_solve(*factorization, rhs);
+    const auto solution = num::linalg::lu_solve(*decomposition, rhs);
     if (!solution) {
         std::println(stderr, "error: {}", num::error_message(solution.error()));
         return 1;

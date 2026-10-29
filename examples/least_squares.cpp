@@ -13,13 +13,13 @@ int main() {
     };
     const num::Vector<double> rhs{1.0, 2.0, 4.0};
 
-    const auto factorization = num::linalg::qr_factorize(matrix);
-    if (!factorization) {
-        std::println(stderr, "error: {}", num::error_message(factorization.error()));
+    const auto decomposition = num::linalg::qr_decompose(matrix);
+    if (!decomposition) {
+        std::println(stderr, "error: {}", num::error_message(decomposition.error()));
         return 1;
     }
 
-    const auto solution = num::linalg::qr_least_squares(*factorization, rhs);
+    const auto solution = num::linalg::qr_least_squares(*decomposition, rhs);
     if (!solution) {
         std::println(stderr, "error: {}", num::error_message(solution.error()));
         return 1;
