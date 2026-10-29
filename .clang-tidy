@@ -34,8 +34,9 @@ CheckOptions:
   readability-identifier-naming.GlobalVariablePrefix: "g_"
   readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
 
-  readability-identifier-length.IgnoredVariableNames: "^[ijknmxyztqrv]$"
-  readability-identifier-length.IgnoredParameterNames: "^[ijknmxyztqrv]$"
+  readability-identifier-length.IgnoredVariableNames: "^[a-z]$"
+  readability-identifier-length.IgnoredParameterNames: "^[a-z]$"
+  readability-identifier-length.IgnoredLoopCounterNames: "^[a-z]$"
 
   readability-function-cognitive-complexity.Threshold: 30
 

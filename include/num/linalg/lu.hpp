@@ -32,8 +32,8 @@ struct LuDecomposition {
 namespace detail::lu {
 
 template <std::floating_point T>
-[[nodiscard]] Vector<T> solve_decomposed(const LuDecomposition<T>& decomposition,
-                                         const Vector<T>& rhs) {
+[[nodiscard]] Vector<T> solve_with_decomposition(const LuDecomposition<T>& decomposition,
+                                                 const Vector<T>& rhs) {
     const std::size_t n = decomposition.lower.rows();
     Vector<T> permuted_rhs(n);
     for (std::size_t i = 0; i < n; ++i) {
@@ -51,7 +51,6 @@ template <std::floating_point T>
 template <std::floating_point T>
 [[nodiscard]] std::expected<LuDecomposition<T>, Error> lu_decompose(const Matrix<T>& matrix) {
     detail::require_square_matrix(matrix);
-
     if (!detail::all_finite(matrix)) {
         return std::unexpected(Error::non_finite_input);
     }
@@ -120,12 +119,11 @@ template <std::floating_point T>
 [[nodiscard]] std::expected<Vector<T>, Error> lu_solve(const LuDecomposition<T>& decomposition,
                                                        const Vector<T>& rhs) {
     detail::require_rhs_size(decomposition.lower.rows(), rhs);
-
     if (!detail::all_finite(rhs)) {
         return std::unexpected(Error::non_finite_input);
     }
 
-    return detail::lu::solve_decomposed(decomposition, rhs);
+    return detail::lu::solve_with_decomposition(decomposition, rhs);
 }
 
 template <std::floating_point T>
@@ -136,7 +134,8 @@ template <std::floating_point T>
     for (std::size_t j = 0; j < n; ++j) {
         Vector<T> basis_vector(n);
         basis_vector[j] = T{1};
-        const Vector<T> inverse_column = detail::lu::solve_decomposed(decomposition, basis_vector);
+        const Vector<T> inverse_column =
+            detail::lu::solve_with_decomposition(decomposition, basis_vector);
         for (std::size_t i = 0; i < n; ++i) {
             result(i, j) = inverse_column[i];
         }

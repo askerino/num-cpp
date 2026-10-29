@@ -6,7 +6,7 @@ C++と数値計算の基礎を学ぶために作っています。実際の開�
 
 ## 主な機能
 
-基本データ構造は`num`、線形代数アルゴリズムは`num::linalg`名前空間にあります。
+基本データ構造は `num`、線形代数アルゴリズムは `num::linalg` 名前空間にあります。
 
 ### ベクトル（`num/core/vector.hpp`）
 
@@ -25,7 +25,7 @@ C++と数値計算の基礎を学ぶために作っています。実際の開�
 
 ### LU分解（`num/linalg/lu.hpp`）
 
-- Doolittle法による部分ピボット選択つきLU分解（`PA = LU`）
+- Doolittle法による部分ピボット選択付きLU分解（`PA = LU`）
 - LU分解を用いた連立一次方程式の求解、行列式、逆行列の計算
 
 ### コレスキー分解（`num/linalg/cholesky.hpp`）
@@ -59,15 +59,15 @@ C++と数値計算の基礎を学ぶために作っています。実際の開�
 
 ### QR分解
 
-- `m >= n`の行列のみ対応
-- `Q`は`m×n`、`R`は`n×n`（thin QR）
-- `R`の対角要素が厳密に0の場合のみランク落ちと判定
+- `m >= n` の行列のみ対応
+- `Q` は `m×n`、`R` は `n×n`（thin QR）
+- `R` の対角要素が厳密に0の場合のみランク落ちと判定
 
 ## エラー処理
 
 - APIの使用方法が誤っている場合（行列のサイズ不一致など）は例外を投げる
-- 正しい入力でも発生し得る数値計算上のエラーは`std::expected<T, num::Error>`で返す
-- `num::Error`のエラーメッセージは`num::error_message`で取得する
+- 正しい入力でも発生し得る数値計算上のエラーは `std::expected<T, num::Error>` で返す
+- `num::Error` のエラーメッセージは `num::error_message` で取得する
 
 | `num::Error`            | 原因                     |
 | ----------------------- | ------------------------ |
@@ -83,7 +83,7 @@ C++と数値計算の基礎を学ぶために作っています。実際の開�
 
 ## 使い方
 
-`num::num`ターゲットをリンクして使用します。
+`num::num` ターゲットをリンクして使用します。
 
 ```cmake
 include(FetchContent)
@@ -97,10 +97,12 @@ FetchContent_MakeAvailable(num-cpp)
 target_link_libraries(app PRIVATE num::num)
 ```
 
+LU分解による連立一次方程式の求解例です。
+
 ```cpp
 #include "num/linalg/lu.hpp"
 
-#include <cstdio> 
+#include <cstdio>
 #include <print>
 
 int main() {
@@ -117,19 +119,18 @@ int main() {
         return 1;
     }
 
-    const auto x = num::linalg::lu_solve(*decomposition, b);
-    if (!x) {
-        std::println(stderr, "error: {}", num::error_message(x.error()));
+    const auto solution = num::linalg::lu_solve(*decomposition, b);
+    if (!solution) {
+        std::println(stderr, "error: {}", num::error_message(solution.error()));
         return 1;
     }
+    const auto& x = *solution;
 
     std::print("x = [");
-    for (const auto value : *x) {
+    for (const auto value : x) {
         std::print(" {:.3f}", value);
     }
     std::println(" ]");
-
-    std::println("residual: {:.3e}", (a * (*x) - b).norm_l2());
 }
 ```
 
@@ -137,12 +138,11 @@ int main() {
 
 ```text
 x = [ 2.600 1.800 -1.000 ]
-residual: 0.000e+00
 ```
 
-詳しいサンプルコードは[`examples/solve_linear_system.cpp`][example]を参照してください。
+詳しいサンプルコードは [`examples/solve_linear_system.cpp`][example] を参照してください。
 
-最小二乗の例は[`examples/least_squares.cpp`][least-squares-example]を参照してください。
+最小二乗の例は [`examples/least_squares.cpp`][least-squares-example] を参照してください。
 
 [example]: https://github.com/askerino/num-cpp/blob/main/examples/solve_linear_system.cpp
 [least-squares-example]: https://github.com/askerino/num-cpp/blob/main/examples/least_squares.cpp
@@ -181,8 +181,8 @@ residual: 0.000e+00
 
 - Git
 - Ninja（任意、ビルド例で使用）
-- カバレッジは使用するClangと同じバージョンの`llvm-profdata`と`llvm-cov`が必要
-- フォーマットは`clang-format` 21、静的解析は`clang-tidy` 21が必要
+- カバレッジは使用するClangと同じバージョンの `llvm-profdata` と `llvm-cov` が必要
+- フォーマットは `clang-format` 21、静的解析は `clang-tidy` 21が必要
 - APIドキュメントの生成はDoxygen 1.9.5以降とGraphvizが必要
 
 ### ビルド
@@ -194,7 +194,7 @@ cmake -S . -B build/clang-debug -G Ninja \
 cmake --build build/clang-debug
 ```
 
-サンプルは`build/clang-debug/examples/`以下にビルドされます。
+サンプルプログラムは `build/clang-debug/examples/` 以下に生成されます。
 
 #### ビルドオプション
 
@@ -206,7 +206,7 @@ cmake --build build/clang-debug
 | `NUM_ENABLE_COVERAGE`   | コードカバレッジ計測を有効にする（Clangのみ） | `OFF`  |
 | `NUM_BUILD_DOCS`        | APIドキュメントを生成する（Doxygen）          | `OFF`  |
 
-※他のプロジェクトから`FetchContent`などで取り込んだ場合、初期値は`OFF`になります。
+※他のプロジェクトから `FetchContent` などで取り込んだ場合、初期値は `OFF` になります。
 
 ### テスト
 
@@ -242,13 +242,13 @@ cmake --build build/clang-coverage --target coverage
 
 ### フォーマット
 
-`clang-format` 21を使用します。設定は[`.clang-format`][clang-format-config]を参照してください。
+`clang-format` 21を使用します。設定は [`.clang-format`][clang-format-config] を参照してください。
 
 [clang-format-config]: https://github.com/askerino/num-cpp/blob/main/.clang-format
 
 ### 静的解析
 
-`clang-tidy` 21を使用します。設定は[`.clang-tidy`][clang-tidy-config]と[`tests/.clang-tidy`][clang-tidy-tests-config]を参照してください。
+`clang-tidy` 21を使用します。設定は [`.clang-tidy`][clang-tidy-config] と [`tests/.clang-tidy`][clang-tidy-tests-config] を参照してください。
 
 [clang-tidy-config]: https://github.com/askerino/num-cpp/blob/main/.clang-tidy
 [clang-tidy-tests-config]: https://github.com/askerino/num-cpp/blob/main/tests/.clang-tidy
@@ -263,4 +263,4 @@ cmake -S . -B build/docs \
 cmake --build build/docs --target docs
 ```
 
-`build/docs/docs/html/index.html`をブラウザで開くと閲覧できます。
+`build/docs/docs/html/index.html` をブラウザで開くと閲覧できます。

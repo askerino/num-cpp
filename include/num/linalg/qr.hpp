@@ -18,8 +18,8 @@ namespace num::linalg {
 
 template <std::floating_point T>
 struct QrDecomposition {
-    Matrix<T> q; ///< `m x n` with orthonormal columns.
-    Matrix<T> r; ///< `n x n` upper triangular.
+    Matrix<T> q;
+    Matrix<T> r;
 };
 
 /// @return The decomposition, or an error if @p matrix is rank deficient or contains a non-finite
@@ -28,7 +28,6 @@ struct QrDecomposition {
 template <std::floating_point T>
 [[nodiscard]] std::expected<QrDecomposition<T>, Error> qr_decompose(const Matrix<T>& matrix) {
     detail::require_tall_or_square_matrix(matrix);
-
     if (!detail::all_finite(matrix)) {
         return std::unexpected(Error::non_finite_input);
     }
@@ -68,7 +67,6 @@ template <std::floating_point T>
 [[nodiscard]] std::expected<Vector<T>, Error>
 qr_least_squares(const QrDecomposition<T>& decomposition, const Vector<T>& rhs) {
     detail::require_rhs_size(decomposition.q.rows(), rhs);
-
     if (!detail::all_finite(rhs)) {
         return std::unexpected(Error::non_finite_input);
     }
