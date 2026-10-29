@@ -12,21 +12,21 @@
 
 namespace num::linalg {
 
-/// @defgroup qr QR factorization
+/// @defgroup qr QR decomposition
 /// @ingroup linalg
 /// @{
 
 template <std::floating_point T>
-struct QrFactorization {
+struct QrDecomposition {
     Matrix<T> q; ///< `m x n` with orthonormal columns.
     Matrix<T> r; ///< `n x n` upper triangular.
 };
 
-/// @return The factorization, or an error if @p matrix is rank deficient or contains a non-finite
+/// @return The decomposition, or an error if @p matrix is rank deficient or contains a non-finite
 /// value.
 /// @throws std::invalid_argument If @p matrix is empty or has fewer rows than columns.
 template <std::floating_point T>
-[[nodiscard]] std::expected<QrFactorization<T>, Error> qr_factorize(const Matrix<T>& matrix) {
+[[nodiscard]] std::expected<QrDecomposition<T>, Error> qr_decompose(const Matrix<T>& matrix) {
     detail::require_tall_or_square_matrix(matrix);
 
     if (!detail::all_finite(matrix)) {
@@ -59,22 +59,22 @@ template <std::floating_point T>
         }
     }
 
-    return QrFactorization<T>{q, r};
+    return QrDecomposition<T>{q, r};
 }
 
 /// @return The least-squares solution, or an error if @p rhs contains a non-finite value.
 /// @throws std::invalid_argument If @p rhs has an incompatible size.
 template <std::floating_point T>
 [[nodiscard]] std::expected<Vector<T>, Error>
-qr_least_squares(const QrFactorization<T>& factorization, const Vector<T>& rhs) {
-    detail::require_rhs_size(factorization.q.rows(), rhs);
+qr_least_squares(const QrDecomposition<T>& decomposition, const Vector<T>& rhs) {
+    detail::require_rhs_size(decomposition.q.rows(), rhs);
 
     if (!detail::all_finite(rhs)) {
         return std::unexpected(Error::non_finite_input);
     }
 
-    const Vector<T> projected_rhs = factorization.q.transpose() * rhs;
-    return detail::backward_substitution(factorization.r, projected_rhs);
+    const Vector<T> projected_rhs = decomposition.q.transpose() * rhs;
+    return detail::backward_substitution(decomposition.r, projected_rhs);
 }
 
 /// @}

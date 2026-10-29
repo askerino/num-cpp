@@ -17,12 +17,12 @@ namespace num::linalg {
 
 /// @defgroup linalg Linear algebra
 
-/// @defgroup lu LU factorization
+/// @defgroup lu LU decomposition
 /// @ingroup linalg
 /// @{
 
 template <std::floating_point T>
-struct LuFactorization {
+struct LuDecomposition {
     Matrix<T> lower;
     Matrix<T> upper;
     std::vector<std::size_t> permutation; ///< Row `i` of `PA` is row `permutation[i]` of `A`.
@@ -32,24 +32,24 @@ struct LuFactorization {
 namespace detail::lu {
 
 template <std::floating_point T>
-[[nodiscard]] Vector<T> solve_factorized(const LuFactorization<T>& factorization,
+[[nodiscard]] Vector<T> solve_decomposed(const LuDecomposition<T>& decomposition,
                                          const Vector<T>& rhs) {
-    const std::size_t n = factorization.lower.rows();
+    const std::size_t n = decomposition.lower.rows();
     Vector<T> permuted_rhs(n);
     for (std::size_t i = 0; i < n; ++i) {
-        permuted_rhs[i] = rhs[factorization.permutation[i]];
+        permuted_rhs[i] = rhs[decomposition.permutation[i]];
     }
 
-    const Vector<T> y = forward_substitution(factorization.lower, permuted_rhs);
-    return backward_substitution(factorization.upper, y);
+    const Vector<T> y = forward_substitution(decomposition.lower, permuted_rhs);
+    return backward_substitution(decomposition.upper, y);
 }
 
 } // namespace detail::lu
 
-/// @return The factorization, or an error if @p matrix is singular or contains a non-finite value.
+/// @return The decomposition, or an error if @p matrix is singular or contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
 template <std::floating_point T>
-[[nodiscard]] std::expected<LuFactorization<T>, Error> lu_factorize(const Matrix<T>& matrix) {
+[[nodiscard]] std::expected<LuDecomposition<T>, Error> lu_decompose(const Matrix<T>& matrix) {
     detail::require_square_matrix(matrix);
 
     if (!detail::all_finite(matrix)) {
@@ -100,16 +100,16 @@ template <std::floating_point T>
         }
     }
 
-    return LuFactorization<T>{lower, upper, permutation, row_swaps};
+    return LuDecomposition<T>{lower, upper, permutation, row_swaps};
 }
 
 /// @note The product of the diagonal entries may overflow or underflow for large matrices; on
 /// underflow the result is indistinguishable from a singular determinant.
 template <std::floating_point T>
-[[nodiscard]] T lu_determinant(const LuFactorization<T>& factorization) {
-    T result = factorization.row_swaps % 2 == 0 ? T{1} : T{-1};
-    for (std::size_t i = 0; i < factorization.upper.rows(); ++i) {
-        result *= factorization.upper(i, i);
+[[nodiscard]] T lu_determinant(const LuDecomposition<T>& decomposition) {
+    T result = decomposition.row_swaps % 2 == 0 ? T{1} : T{-1};
+    for (std::size_t i = 0; i < decomposition.upper.rows(); ++i) {
+        result *= decomposition.upper(i, i);
     }
     return result;
 }
@@ -117,26 +117,26 @@ template <std::floating_point T>
 /// @return The solution, or an error if @p rhs contains a non-finite value.
 /// @throws std::invalid_argument If @p rhs has an incompatible size.
 template <std::floating_point T>
-[[nodiscard]] std::expected<Vector<T>, Error> lu_solve(const LuFactorization<T>& factorization,
+[[nodiscard]] std::expected<Vector<T>, Error> lu_solve(const LuDecomposition<T>& decomposition,
                                                        const Vector<T>& rhs) {
-    detail::require_rhs_size(factorization.lower.rows(), rhs);
+    detail::require_rhs_size(decomposition.lower.rows(), rhs);
 
     if (!detail::all_finite(rhs)) {
         return std::unexpected(Error::non_finite_input);
     }
 
-    return detail::lu::solve_factorized(factorization, rhs);
+    return detail::lu::solve_decomposed(decomposition, rhs);
 }
 
 template <std::floating_point T>
-[[nodiscard]] Matrix<T> lu_inverse(const LuFactorization<T>& factorization) {
-    const std::size_t n = factorization.lower.rows();
+[[nodiscard]] Matrix<T> lu_inverse(const LuDecomposition<T>& decomposition) {
+    const std::size_t n = decomposition.lower.rows();
     Matrix<T> result(n, n);
 
     for (std::size_t j = 0; j < n; ++j) {
         Vector<T> basis_vector(n);
         basis_vector[j] = T{1};
-        const Vector<T> inverse_column = detail::lu::solve_factorized(factorization, basis_vector);
+        const Vector<T> inverse_column = detail::lu::solve_decomposed(decomposition, basis_vector);
         for (std::size_t i = 0; i < n; ++i) {
             result(i, j) = inverse_column[i];
         }

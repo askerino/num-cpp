@@ -13,32 +13,32 @@
 
 namespace num::linalg {
 
-/// @defgroup cholesky Cholesky factorization
+/// @defgroup cholesky Cholesky decomposition
 /// @ingroup linalg
 /// @{
 
 template <std::floating_point T>
-struct CholeskyFactorization {
+struct CholeskyDecomposition {
     Matrix<T> lower;
 };
 
 namespace detail::cholesky {
 
 template <std::floating_point T>
-[[nodiscard]] Vector<T> solve_factorized(const CholeskyFactorization<T>& factorization,
+[[nodiscard]] Vector<T> solve_decomposed(const CholeskyDecomposition<T>& decomposition,
                                          const Vector<T>& rhs) {
-    const Vector<T> y = forward_substitution(factorization.lower, rhs);
-    return backward_substitution(factorization.lower.transpose(), y);
+    const Vector<T> y = forward_substitution(decomposition.lower, rhs);
+    return backward_substitution(decomposition.lower.transpose(), y);
 }
 
 } // namespace detail::cholesky
 
-/// @return The factorization, or an error if @p matrix is not positive definite or contains a
+/// @return The decomposition, or an error if @p matrix is not positive definite or contains a
 /// non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
 template <std::floating_point T>
-[[nodiscard]] std::expected<CholeskyFactorization<T>, Error>
-cholesky_factorize(const Matrix<T>& matrix) {
+[[nodiscard]] std::expected<CholeskyDecomposition<T>, Error>
+cholesky_decompose(const Matrix<T>& matrix) {
     detail::require_square_matrix(matrix);
 
     if (!detail::all_finite(matrix)) {
@@ -67,16 +67,16 @@ cholesky_factorize(const Matrix<T>& matrix) {
         }
     }
 
-    return CholeskyFactorization<T>{lower};
+    return CholeskyDecomposition<T>{lower};
 }
 
 /// @note The product of the squared diagonal entries may overflow or underflow for large matrices;
 /// on underflow the result is indistinguishable from a singular determinant.
 template <std::floating_point T>
-[[nodiscard]] T cholesky_determinant(const CholeskyFactorization<T>& factorization) {
+[[nodiscard]] T cholesky_determinant(const CholeskyDecomposition<T>& decomposition) {
     T result{1};
-    for (std::size_t i = 0; i < factorization.lower.rows(); ++i) {
-        result *= factorization.lower(i, i) * factorization.lower(i, i);
+    for (std::size_t i = 0; i < decomposition.lower.rows(); ++i) {
+        result *= decomposition.lower(i, i) * decomposition.lower(i, i);
     }
     return result;
 }
@@ -85,26 +85,26 @@ template <std::floating_point T>
 /// @throws std::invalid_argument If @p rhs has an incompatible size.
 template <std::floating_point T>
 [[nodiscard]] std::expected<Vector<T>, Error>
-cholesky_solve(const CholeskyFactorization<T>& factorization, const Vector<T>& rhs) {
-    detail::require_rhs_size(factorization.lower.rows(), rhs);
+cholesky_solve(const CholeskyDecomposition<T>& decomposition, const Vector<T>& rhs) {
+    detail::require_rhs_size(decomposition.lower.rows(), rhs);
 
     if (!detail::all_finite(rhs)) {
         return std::unexpected(Error::non_finite_input);
     }
 
-    return detail::cholesky::solve_factorized(factorization, rhs);
+    return detail::cholesky::solve_decomposed(decomposition, rhs);
 }
 
 template <std::floating_point T>
-[[nodiscard]] Matrix<T> cholesky_inverse(const CholeskyFactorization<T>& factorization) {
-    const std::size_t n = factorization.lower.rows();
+[[nodiscard]] Matrix<T> cholesky_inverse(const CholeskyDecomposition<T>& decomposition) {
+    const std::size_t n = decomposition.lower.rows();
     Matrix<T> result(n, n);
 
     for (std::size_t j = 0; j < n; ++j) {
         Vector<T> basis_vector(n);
         basis_vector[j] = T{1};
         const Vector<T> inverse_column =
-            detail::cholesky::solve_factorized(factorization, basis_vector);
+            detail::cholesky::solve_decomposed(decomposition, basis_vector);
         for (std::size_t i = 0; i < n; ++i) {
             result(i, j) = inverse_column[i];
         }
