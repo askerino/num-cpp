@@ -2,26 +2,24 @@
 #include "num/linalg/lu.hpp"
 #include "support/comparison.hpp"
 
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <stdexcept>
 
 namespace {
-// Symmetric positive definite matrix with a known Cholesky factor (A = LLᵀ).
+// Returns a symmetric positive definite matrix.
 num::Matrix<double> spd_matrix() {
     return {{4.0, 12.0, -16.0}, {12.0, 37.0, -43.0}, {-16.0, -43.0, 98.0}};
-}
-
-// Lower-triangular Cholesky factor L of spd_matrix().
-num::Matrix<double> expected_lower() {
-    return {{2.0, 0.0, 0.0}, {6.0, 1.0, 0.0}, {-8.0, 5.0, 3.0}};
 }
 } // namespace
 
 TEST(CholeskyDecompose, ComputesLowerFactor) {
     const auto decomposition = num::linalg::cholesky_decompose(spd_matrix()).value();
 
-    num::test::expect_matrix_near(decomposition.lower, expected_lower());
+    num::test::expect_matrix_near(
+        decomposition.lower,
+        num::Matrix<double>{{2.0, 0.0, 0.0}, {6.0, 1.0, 0.0}, {-8.0, 5.0, 3.0}});
 }
 
 TEST(CholeskyDecompose, SatisfiesAEqualsLLt) {

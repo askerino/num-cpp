@@ -25,8 +25,8 @@ struct CholeskyDecomposition {
 namespace detail::cholesky {
 
 template <std::floating_point T>
-[[nodiscard]] Vector<T> solve_decomposed(const CholeskyDecomposition<T>& decomposition,
-                                         const Vector<T>& rhs) {
+[[nodiscard]] Vector<T> solve_with_decomposition(const CholeskyDecomposition<T>& decomposition,
+                                                 const Vector<T>& rhs) {
     const Vector<T> y = forward_substitution(decomposition.lower, rhs);
     return backward_substitution(decomposition.lower.transpose(), y);
 }
@@ -40,7 +40,6 @@ template <std::floating_point T>
 [[nodiscard]] std::expected<CholeskyDecomposition<T>, Error>
 cholesky_decompose(const Matrix<T>& matrix) {
     detail::require_square_matrix(matrix);
-
     if (!detail::all_finite(matrix)) {
         return std::unexpected(Error::non_finite_input);
     }
@@ -87,12 +86,11 @@ template <std::floating_point T>
 [[nodiscard]] std::expected<Vector<T>, Error>
 cholesky_solve(const CholeskyDecomposition<T>& decomposition, const Vector<T>& rhs) {
     detail::require_rhs_size(decomposition.lower.rows(), rhs);
-
     if (!detail::all_finite(rhs)) {
         return std::unexpected(Error::non_finite_input);
     }
 
-    return detail::cholesky::solve_decomposed(decomposition, rhs);
+    return detail::cholesky::solve_with_decomposition(decomposition, rhs);
 }
 
 template <std::floating_point T>
@@ -104,7 +102,7 @@ template <std::floating_point T>
         Vector<T> basis_vector(n);
         basis_vector[j] = T{1};
         const Vector<T> inverse_column =
-            detail::cholesky::solve_decomposed(decomposition, basis_vector);
+            detail::cholesky::solve_with_decomposition(decomposition, basis_vector);
         for (std::size_t i = 0; i < n; ++i) {
             result(i, j) = inverse_column[i];
         }

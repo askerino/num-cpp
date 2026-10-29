@@ -2,6 +2,7 @@
 #include "num/linalg/qr.hpp"
 #include "support/comparison.hpp"
 
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
@@ -11,9 +12,6 @@ namespace {
 num::Matrix<double> square_matrix() {
     return {{2.0, 1.0, -1.0}, {1.0, 3.0, 2.0}, {3.0, -1.0, 1.0}};
 }
-
-num::Vector<double> square_rhs() { return {8.0, 6.0, 5.0}; }
-
 num::Matrix<double> tall_matrix() { return {{1.0, 0.0}, {1.0, 1.0}, {1.0, 2.0}}; }
 } // namespace
 
@@ -114,7 +112,7 @@ TEST(QrDecompose, ThrowsOnInvalidInputs) {
 
 TEST(QrLeastSquares, SolvesSquareSystem) {
     const auto matrix = square_matrix();
-    const auto rhs = square_rhs();
+    const num::Vector<double> rhs{8.0, 6.0, 5.0};
     const auto decomposition = num::linalg::qr_decompose(matrix).value();
     const auto solution = num::linalg::qr_least_squares(decomposition, rhs).value();
 
@@ -123,7 +121,7 @@ TEST(QrLeastSquares, SolvesSquareSystem) {
 
 TEST(QrLeastSquares, MatchesLuSolve) {
     const auto matrix = square_matrix();
-    const auto rhs = square_rhs();
+    const num::Vector<double> rhs{8.0, 6.0, 5.0};
     const auto qr_decomposition = num::linalg::qr_decompose(matrix).value();
     const auto qr_solution = num::linalg::qr_least_squares(qr_decomposition, rhs).value();
     const auto lu_decomposition = num::linalg::lu_decompose(matrix).value();

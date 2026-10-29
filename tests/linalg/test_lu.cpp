@@ -1,53 +1,49 @@
 #include "num/linalg/lu.hpp"
 #include "support/comparison.hpp"
 
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <stdexcept>
 
 namespace {
-// Matrix that requires a row swap at the first pivot.
+// Returns a matrix that requires row swaps.
 num::Matrix<double> pivot_matrix() { return {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 10.0}}; }
-
-// Matrix that requires no row swap.
-num::Matrix<double> no_swap_matrix() { return {{2.0, 1.0}, {0.0, 3.0}}; }
-
-// Matrix that requires exactly one row swap (det = -1).
-num::Matrix<double> one_swap_matrix() { return {{0.0, 1.0}, {1.0, 0.0}}; }
 } // namespace
 
 TEST(LuDecompose, SatisfiesPAEqualsLU) {
     const auto matrix = pivot_matrix();
     const auto decomposition = num::linalg::lu_decompose(matrix).value();
-    const auto lu_product = decomposition.lower * decomposition.upper;
-
     ASSERT_EQ(decomposition.permutation.size(), matrix.rows());
+
+    num::Matrix<double> permuted(matrix.rows(), matrix.cols());
     for (std::size_t row = 0; row < matrix.rows(); ++row) {
         for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            EXPECT_NEAR(lu_product(row, column), matrix(decomposition.permutation[row], column),
-                        num::test::tolerance);
+            permuted(row, column) = matrix(decomposition.permutation[row], column);
         }
     }
+    num::test::expect_matrix_near(decomposition.lower * decomposition.upper, permuted);
 }
 
 TEST(LuDecompose, ReturnsTriangularFactors) {
     const auto matrix = pivot_matrix();
     const auto decomposition = num::linalg::lu_decompose(matrix).value();
+    const std::size_t n = matrix.rows();
 
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
+    for (std::size_t row = 0; row < n; ++row) {
         EXPECT_DOUBLE_EQ(decomposition.lower(row, row), 1.0);
-        for (std::size_t column = row + 1; column < matrix.cols(); ++column) {
+        for (std::size_t column = row + 1; column < n; ++column) {
             EXPECT_DOUBLE_EQ(decomposition.lower(row, column), 0.0);
-            const std::size_t upper_row = column;
-            const std::size_t upper_column = row;
-            EXPECT_DOUBLE_EQ(decomposition.upper(upper_row, upper_column), 0.0);
+        }
+        for (std::size_t column = 0; column < row; ++column) {
+            EXPECT_DOUBLE_EQ(decomposition.upper(row, column), 0.0);
         }
     }
 }
 
 TEST(LuDecompose, CountsRowSwaps) {
-    const auto no_swap = no_swap_matrix();
-    const auto one_swap = one_swap_matrix();
+    const num::Matrix<double> no_swap{{2.0, 1.0}, {0.0, 3.0}};
+    const num::Matrix<double> one_swap{{0.0, 1.0}, {1.0, 0.0}};
     const auto no_swap_decomposition = num::linalg::lu_decompose(no_swap).value();
     const auto one_swap_decomposition = num::linalg::lu_decompose(one_swap).value();
 
@@ -85,8 +81,8 @@ TEST(LuDecompose, ThrowsOnInvalidInputs) {
 }
 
 TEST(LuDeterminant, Computes) {
-    const auto no_swap = no_swap_matrix();
-    const auto one_swap = one_swap_matrix();
+    const num::Matrix<double> no_swap{{2.0, 1.0}, {0.0, 3.0}};
+    const num::Matrix<double> one_swap{{0.0, 1.0}, {1.0, 0.0}};
     const auto no_swap_decomposition = num::linalg::lu_decompose(no_swap).value();
     const auto one_swap_decomposition = num::linalg::lu_decompose(one_swap).value();
 
