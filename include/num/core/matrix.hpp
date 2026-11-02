@@ -60,6 +60,17 @@ class Matrix {
         return result;
     }
 
+    /// @return A square matrix with @p values on the diagonal and zeros elsewhere.
+    /// @throws std::length_error If the requested matrix is too large.
+    [[nodiscard]] static Matrix from_diagonal(const Vector<T>& values) {
+        const std::size_t dimension = values.size();
+        Matrix result(dimension, dimension);
+        for (std::size_t i = 0; i < dimension; ++i) {
+            result(i, i) = values[i];
+        }
+        return result;
+    }
+
     /// @note Performs no bounds checking; use at() for a checked access.
     [[nodiscard]] T& operator()(std::size_t row, std::size_t column) noexcept {
         return data_[(row * cols_) + column];

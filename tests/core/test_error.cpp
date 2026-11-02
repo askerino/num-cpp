@@ -9,6 +9,8 @@ TEST(ErrorMessage, ReturnsMessages) {
     EXPECT_EQ(num::error_message(num::Error::non_positive_definite),
               "matrix is not positive definite");
     EXPECT_EQ(num::error_message(num::Error::rank_deficient), "matrix is rank deficient");
+    EXPECT_EQ(num::error_message(num::Error::non_symmetric), "matrix is not symmetric");
+    EXPECT_EQ(num::error_message(num::Error::no_convergence), "iteration did not converge");
 }
 
 TEST(ErrorMessage, ReturnsFallbackForUnknownValue) {
