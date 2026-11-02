@@ -3,6 +3,7 @@
 #include "num/core/error.hpp"
 #include "num/core/matrix.hpp"
 #include "num/core/vector.hpp"
+#include "num/linalg/detail/jacobi.hpp"
 #include "num/linalg/detail/validation.hpp"
 
 #include <algorithm>
@@ -53,18 +54,14 @@ template <std::floating_point T>
 template <std::floating_point T>
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void rotate(Matrix<T>& matrix, Matrix<T>& eigenvectors, std::size_t p, std::size_t q) {
-    const T tau = (matrix(q, q) - matrix(p, p)) / (T{2} * matrix(p, q));
-    const T t =
-        tau == T{} ? T{1} : std::copysign(T{1}, tau) / (std::abs(tau) + std::hypot(T{1}, tau));
-    const T c = T{1} / std::hypot(T{1}, t);
-    const T s = t * c;
+    const auto rotation = jacobi::make_rotation(matrix(p, p), matrix(q, q), matrix(p, q));
 
     const T a_pp = matrix(p, p);
     const T a_qq = matrix(q, q);
     const T a_pq = matrix(p, q);
 
-    matrix(p, p) = a_pp - (t * a_pq);
-    matrix(q, q) = a_qq + (t * a_pq);
+    matrix(p, p) = a_pp - (rotation.tan * a_pq);
+    matrix(q, q) = a_qq + (rotation.tan * a_pq);
     matrix(p, q) = T{};
     matrix(q, p) = T{};
 
@@ -72,19 +69,16 @@ void rotate(Matrix<T>& matrix, Matrix<T>& eigenvectors, std::size_t p, std::size
         if (i != p && i != q) {
             const T a_ip = matrix(i, p);
             const T a_iq = matrix(i, q);
-            const T new_a_ip = (c * a_ip) - (s * a_iq);
-            const T new_a_iq = (s * a_ip) + (c * a_iq);
+            const T new_a_ip = (rotation.cos * a_ip) - (rotation.sin * a_iq);
+            const T new_a_iq = (rotation.sin * a_ip) + (rotation.cos * a_iq);
             matrix(i, p) = new_a_ip;
             matrix(p, i) = new_a_ip;
             matrix(i, q) = new_a_iq;
             matrix(q, i) = new_a_iq;
         }
-
-        const T v_ip = eigenvectors(i, p);
-        const T v_iq = eigenvectors(i, q);
-        eigenvectors(i, p) = (c * v_ip) - (s * v_iq);
-        eigenvectors(i, q) = (s * v_ip) + (c * v_iq);
     }
+
+    jacobi::rotate_columns(eigenvectors, p, q, rotation);
 }
 
 template <std::floating_point T>
