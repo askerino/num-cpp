@@ -13,6 +13,8 @@ enum class Error : std::uint8_t {
     singular_matrix,
     non_positive_definite,
     rank_deficient,
+    non_symmetric,
+    no_convergence,
 };
 
 [[nodiscard]] constexpr std::string_view error_message(Error error) noexcept {
@@ -25,6 +27,10 @@ enum class Error : std::uint8_t {
         return "matrix is not positive definite";
     case Error::rank_deficient:
         return "matrix is rank deficient";
+    case Error::non_symmetric:
+        return "matrix is not symmetric";
+    case Error::no_convergence:
+        return "iteration did not converge";
     }
     return "unknown error";
 }

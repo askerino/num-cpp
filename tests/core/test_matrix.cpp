@@ -60,6 +60,28 @@ TEST(MatrixConstruction, CreatesIdentity) {
     }
 }
 
+TEST(MatrixConstruction, CreatesFromDiagonal) {
+    const num::Vector<double> diagonal{1.0, -2.0, 3.0};
+    const auto matrix = num::Matrix<double>::from_diagonal(diagonal);
+
+    EXPECT_EQ(matrix.rows(), 3);
+    EXPECT_EQ(matrix.cols(), 3);
+    EXPECT_EQ(matrix.size(), 9);
+    for (std::size_t row = 0; row < matrix.rows(); ++row) {
+        for (std::size_t column = 0; column < matrix.cols(); ++column) {
+            EXPECT_DOUBLE_EQ(matrix(row, column), row == column ? diagonal[row] : 0.0);
+        }
+    }
+}
+
+TEST(MatrixConstruction, CreatesFromEmptyDiagonal) {
+    const auto matrix = num::Matrix<double>::from_diagonal(num::Vector<double>{});
+
+    EXPECT_EQ(matrix.rows(), 0);
+    EXPECT_EQ(matrix.cols(), 0);
+    EXPECT_TRUE(matrix.empty());
+}
+
 TEST(MatrixConstruction, ThrowsOnRaggedRows) {
     EXPECT_THROW((num::Matrix<double>{{1.0, 2.0}, {3.0}}), std::invalid_argument);
     EXPECT_THROW((num::Matrix<double>{{1.0}, {2.0, 3.0}}), std::invalid_argument);
