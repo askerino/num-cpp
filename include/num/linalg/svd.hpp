@@ -42,6 +42,12 @@ inline constexpr int tolerance_epsilon_multiplier = 100;
 inline constexpr std::size_t default_max_sweeps = 50;
 
 template <std::floating_point T>
+[[nodiscard]] T rank_threshold(const SvdDecomposition<T>& decomposition) {
+    const std::size_t max_dimension = std::max(decomposition.u.rows(), decomposition.v.rows());
+    return static_cast<T>(max_dimension) * std::numeric_limits<T>::epsilon() * decomposition.s[0];
+}
+
+template <std::floating_point T>
 [[nodiscard]] T max_abs(const Matrix<T>& matrix) {
     T result{};
     for (const T value : matrix) {
@@ -262,6 +268,70 @@ svd_decompose(const Matrix<T>& matrix,
     detail::svd::orient_columns(u, v);
 
     return SvdDecomposition<T>{std::move(u), std::move(s), std::move(v)};
+}
+
+template <std::floating_point T>
+[[nodiscard]] std::size_t svd_rank(const SvdDecomposition<T>& decomposition) {
+    const T threshold = detail::svd::rank_threshold(decomposition);
+    return static_cast<std::size_t>(
+        std::ranges::count_if(decomposition.s, [threshold](T value) { return value > threshold; }));
+}
+
+/// @return The least-squares solution, or an error if @p rhs contains a non-finite
+/// value.
+/// @throws std::invalid_argument If @p rhs has an incompatible size.
+template <std::floating_point T>
+[[nodiscard]] std::expected<Vector<T>, Error>
+svd_least_squares(const SvdDecomposition<T>& decomposition, const Vector<T>& rhs) {
+    detail::require_rhs_size(decomposition.u.rows(), rhs);
+    if (!detail::all_finite(rhs)) {
+        return std::unexpected(Error::non_finite_input);
+    }
+
+    const Vector<T> projected_rhs = decomposition.u.transpose() * rhs;
+    const T threshold = detail::svd::rank_threshold(decomposition);
+    Vector<T> solution(decomposition.v.rows());
+
+    for (std::size_t k = 0; k < decomposition.s.size(); ++k) {
+        if (decomposition.s[k] <= threshold) {
+            continue;
+        }
+        solution += (projected_rhs[k] / decomposition.s[k]) * decomposition.v.column(k);
+    }
+
+    return solution;
+}
+
+template <std::floating_point T>
+[[nodiscard]] Matrix<T> svd_pseudo_inverse(const SvdDecomposition<T>& decomposition) {
+    const std::size_t m = decomposition.u.rows();
+    const std::size_t n = decomposition.v.rows();
+    const T threshold = detail::svd::rank_threshold(decomposition);
+    Matrix<T> inverse(n, m);
+
+    for (std::size_t k = 0; k < decomposition.s.size(); ++k) {
+        if (decomposition.s[k] <= threshold) {
+            continue;
+        }
+        const T inverse_singular_value = T{1} / decomposition.s[k];
+        for (std::size_t i = 0; i < n; ++i) {
+            const T v_scaled = decomposition.v(i, k) * inverse_singular_value;
+            for (std::size_t j = 0; j < m; ++j) {
+                inverse(i, j) += v_scaled * decomposition.u(j, k);
+            }
+        }
+    }
+
+    return inverse;
+}
+
+template <std::floating_point T>
+[[nodiscard]] T svd_condition_number(const SvdDecomposition<T>& decomposition) {
+    const T s_min = decomposition.s[decomposition.s.size() - 1];
+    if (s_min <= detail::svd::rank_threshold(decomposition)) {
+        return std::numeric_limits<T>::infinity();
+    }
+    return decomposition.s[0] / s_min;
 }
 
 /// @}
