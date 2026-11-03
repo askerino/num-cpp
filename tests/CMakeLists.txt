@@ -22,6 +22,7 @@ add_executable(num_tests
         linalg/test_cholesky.cpp
         linalg/test_qr.cpp
         linalg/test_eigen.cpp
+        linalg/test_svd.cpp
 )
 
 target_include_directories(num_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
