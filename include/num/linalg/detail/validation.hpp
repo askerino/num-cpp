@@ -20,6 +20,14 @@ template <typename Range>
 }
 
 template <std::floating_point T>
+void require_non_empty_matrix(const Matrix<T>& matrix) {
+    if (matrix.rows() == 0 || matrix.cols() == 0) {
+        throw std::invalid_argument(
+            std::format("matrix must be non-empty: got {}x{}", matrix.rows(), matrix.cols()));
+    }
+}
+
+template <std::floating_point T>
 void require_square_matrix(const Matrix<T>& matrix) {
     if (matrix.rows() == 0 || matrix.rows() != matrix.cols()) {
         throw std::invalid_argument(std::format("matrix must be non-empty and square: got {}x{}",
