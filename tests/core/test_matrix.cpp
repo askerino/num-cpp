@@ -199,24 +199,33 @@ TEST(MatrixNorms, AvoidsOverflowAndUnderflow) {
     EXPECT_NEAR(tiny_matrix.norm_frobenius(), 1e-200 * std::numbers::sqrt2, 1e-210);
 }
 
-TEST(MatrixArithmetic, SupportsArithmetic) {
+TEST(MatrixArithmetic, Adds) {
     const num::Matrix<double> lhs{{1.0, 2.0}, {3.0, 4.0}};
     const num::Matrix<double> rhs{{5.0, 6.0}, {7.0, 8.0}};
-
     const auto sum = lhs + rhs;
-    const auto difference = rhs - lhs;
-    const auto left_scaled = 2.0 * lhs;
-    const auto right_scaled = lhs * 2.0;
-    const auto divided = rhs / 2.0;
 
     EXPECT_DOUBLE_EQ(sum(0, 0), 6.0);
     EXPECT_DOUBLE_EQ(sum(0, 1), 8.0);
     EXPECT_DOUBLE_EQ(sum(1, 0), 10.0);
     EXPECT_DOUBLE_EQ(sum(1, 1), 12.0);
+}
+
+TEST(MatrixArithmetic, Subtracts) {
+    const num::Matrix<double> lhs{{5.0, 6.0}, {7.0, 8.0}};
+    const num::Matrix<double> rhs{{1.0, 2.0}, {3.0, 4.0}};
+    const auto difference = lhs - rhs;
+
     EXPECT_DOUBLE_EQ(difference(0, 0), 4.0);
     EXPECT_DOUBLE_EQ(difference(0, 1), 4.0);
     EXPECT_DOUBLE_EQ(difference(1, 0), 4.0);
     EXPECT_DOUBLE_EQ(difference(1, 1), 4.0);
+}
+
+TEST(MatrixArithmetic, Scales) {
+    const num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
+    const auto left_scaled = 2.0 * matrix;
+    const auto right_scaled = matrix * 2.0;
+
     EXPECT_DOUBLE_EQ(left_scaled(0, 0), 2.0);
     EXPECT_DOUBLE_EQ(left_scaled(0, 1), 4.0);
     EXPECT_DOUBLE_EQ(left_scaled(1, 0), 6.0);
@@ -225,13 +234,19 @@ TEST(MatrixArithmetic, SupportsArithmetic) {
     EXPECT_DOUBLE_EQ(right_scaled(0, 1), 4.0);
     EXPECT_DOUBLE_EQ(right_scaled(1, 0), 6.0);
     EXPECT_DOUBLE_EQ(right_scaled(1, 1), 8.0);
+}
+
+TEST(MatrixArithmetic, Divides) {
+    const num::Matrix<double> matrix{{5.0, 6.0}, {7.0, 8.0}};
+    const auto divided = matrix / 2.0;
+
     EXPECT_DOUBLE_EQ(divided(0, 0), 2.5);
     EXPECT_DOUBLE_EQ(divided(0, 1), 3.0);
     EXPECT_DOUBLE_EQ(divided(1, 0), 3.5);
     EXPECT_DOUBLE_EQ(divided(1, 1), 4.0);
 }
 
-TEST(MatrixArithmetic, SupportsUnaryMinus) {
+TEST(MatrixArithmetic, Negates) {
     const num::Matrix<double> matrix{{1.0, -2.0}, {3.0, -4.0}};
     const auto negated = -matrix;
 
