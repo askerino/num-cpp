@@ -15,18 +15,20 @@ static_assert(VectorElement<long double>);
 static_assert(!VectorElement<int>);
 static_assert(!VectorElement<bool>);
 
-TEST(VectorConstruction, Constructs) {
+TEST(VectorConstruction, ConstructsWithSize) {
     const num::Vector<double> vector(5);
 
     EXPECT_EQ(vector.size(), 5);
     for (const auto value : vector) {
         EXPECT_DOUBLE_EQ(value, 0.0);
     }
+}
 
-    const num::Vector<double> from_elements{5.0};
+TEST(VectorConstruction, ConstructsFromInitializerList) {
+    const num::Vector<double> vector{5.0};
 
-    EXPECT_EQ(from_elements.size(), 1);
-    EXPECT_DOUBLE_EQ(from_elements[0], 5.0);
+    EXPECT_EQ(vector.size(), 1);
+    EXPECT_DOUBLE_EQ(vector[0], 5.0);
 }
 
 TEST(VectorConstruction, CreatesZero) {
@@ -44,12 +46,10 @@ TEST(VectorAccess, AccessesElements) {
     EXPECT_DOUBLE_EQ(vector.at(1), 2.0);
     vector.at(2) = 9.0;
     EXPECT_DOUBLE_EQ(vector.at(2), 9.0);
-    EXPECT_THROW(static_cast<void>(vector.at(3)), std::out_of_range);
 
     const num::Vector<double> const_vector{1.0, 2.0, 3.0};
 
     EXPECT_DOUBLE_EQ(const_vector.at(0), 1.0);
-    EXPECT_THROW(static_cast<void>(const_vector.at(3)), std::out_of_range);
 }
 
 TEST(VectorAccess, SupportsContainer) {
@@ -71,6 +71,14 @@ TEST(VectorAccess, SupportsContainer) {
     EXPECT_DOUBLE_EQ(vector[0], 2.0);
     EXPECT_DOUBLE_EQ(vector[1], 8.0);
     EXPECT_DOUBLE_EQ(vector[2], 6.0);
+}
+
+TEST(VectorAccess, ThrowsOnOutOfRangeIndex) {
+    num::Vector<double> vector{1.0, 2.0, 3.0};
+    const num::Vector<double> const_vector{1.0, 2.0, 3.0};
+
+    EXPECT_THROW(static_cast<void>(vector.at(3)), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(const_vector.at(3)), std::out_of_range);
 }
 
 TEST(VectorNorms, ComputesNorms) {
