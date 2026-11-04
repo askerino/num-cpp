@@ -164,7 +164,7 @@ TEST(VectorNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(empty.norm_infinity(), 0.0);
 }
 
-TEST(VectorNorms, AvoidsOverflowAndUnderflow) {
+TEST(VectorNorms, HandlesExtremeScales) {
     const num::Vector<double> huge_vector{1e200, 1e200};
     const num::Vector<double> tiny_vector{1e-200, 1e-200};
 
