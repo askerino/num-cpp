@@ -2,7 +2,6 @@
 #include "num/linalg/lu.hpp"
 #include "support/comparison.hpp"
 
-#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <stdexcept>
@@ -33,11 +32,7 @@ TEST(CholeskyDecompose, SatisfiesAEqualsLLt) {
 TEST(CholeskyDecompose, ReturnsLowerTriangular) {
     const auto decomposition = num::linalg::cholesky_decompose(spd_matrix()).value();
 
-    for (std::size_t row = 0; row < decomposition.lower.rows(); ++row) {
-        for (std::size_t column = row + 1; column < decomposition.lower.cols(); ++column) {
-            EXPECT_DOUBLE_EQ(decomposition.lower(row, column), 0.0);
-        }
-    }
+    num::test::expect_lower_triangular(decomposition.lower);
 }
 
 TEST(CholeskyDecompose, UsesOnlyLowerTriangle) {

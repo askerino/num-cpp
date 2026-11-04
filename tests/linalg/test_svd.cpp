@@ -3,7 +3,6 @@
 #include "support/comparison.hpp"
 
 #include <cmath>
-#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <stdexcept>
@@ -17,23 +16,6 @@ void expect_reconstruction(const num::Matrix<double>& matrix,
                            const num::linalg::SvdDecomposition<double>& decomposition) {
     const auto sigma = num::Matrix<double>::from_diagonal(decomposition.s);
     num::test::expect_matrix_near(decomposition.u * sigma * decomposition.v.transpose(), matrix);
-}
-
-void expect_orthonormal_columns(const num::Matrix<double>& matrix) {
-    num::test::expect_matrix_near(matrix.transpose() * matrix,
-                                  num::Matrix<double>::identity(matrix.cols()));
-}
-
-void expect_oriented_columns(const num::Matrix<double>& matrix) {
-    for (std::size_t column = 0; column < matrix.cols(); ++column) {
-        std::size_t largest = 0;
-        for (std::size_t row = 1; row < matrix.rows(); ++row) {
-            if (std::abs(matrix(row, column)) > std::abs(matrix(largest, column))) {
-                largest = row;
-            }
-        }
-        EXPECT_GE(matrix(largest, column), 0.0);
-    }
 }
 
 } // namespace
@@ -56,8 +38,8 @@ TEST(SvdDecompose, SatisfiesAEqualsUSigmaVt) {
 TEST(SvdDecompose, ReturnsOrthonormalColumns) {
     const auto decomposition = num::linalg::svd_decompose(tall_matrix()).value();
 
-    expect_orthonormal_columns(decomposition.u);
-    expect_orthonormal_columns(decomposition.v);
+    num::test::expect_orthonormal_columns(decomposition.u);
+    num::test::expect_orthonormal_columns(decomposition.v);
 }
 
 TEST(SvdDecompose, ReturnsSingularValuesInDescendingOrder) {
@@ -77,8 +59,8 @@ TEST(SvdDecompose, SupportsTallMatrices) {
     EXPECT_EQ(decomposition.v.cols(), 2);
 
     expect_reconstruction(matrix, decomposition);
-    expect_orthonormal_columns(decomposition.u);
-    expect_orthonormal_columns(decomposition.v);
+    num::test::expect_orthonormal_columns(decomposition.u);
+    num::test::expect_orthonormal_columns(decomposition.v);
 }
 
 TEST(SvdDecompose, SupportsWideMatrices) {
@@ -92,16 +74,16 @@ TEST(SvdDecompose, SupportsWideMatrices) {
     EXPECT_EQ(decomposition.v.cols(), 2);
 
     expect_reconstruction(matrix, decomposition);
-    expect_orthonormal_columns(decomposition.u);
-    expect_orthonormal_columns(decomposition.v);
+    num::test::expect_orthonormal_columns(decomposition.u);
+    num::test::expect_orthonormal_columns(decomposition.v);
 }
 
 TEST(SvdDecompose, OrientsLeftSingularVectors) {
     const auto tall_decomposition = num::linalg::svd_decompose(tall_matrix()).value();
     const auto wide_decomposition = num::linalg::svd_decompose(wide_matrix()).value();
 
-    expect_oriented_columns(tall_decomposition.u);
-    expect_oriented_columns(wide_decomposition.u);
+    num::test::expect_oriented_columns(tall_decomposition.u);
+    num::test::expect_oriented_columns(wide_decomposition.u);
 }
 
 TEST(SvdDecompose, PairsRightSingularVectorSignWithLeft) {
@@ -139,8 +121,8 @@ TEST(SvdDecompose, HandlesRankDeficientMatrix) {
     EXPECT_NEAR(decomposition.s[0], 5.0, num::test::tolerance);
     EXPECT_NEAR(decomposition.s[1], 0.0, num::test::tolerance);
     expect_reconstruction(matrix, decomposition);
-    expect_orthonormal_columns(decomposition.u);
-    expect_orthonormal_columns(decomposition.v);
+    num::test::expect_orthonormal_columns(decomposition.u);
+    num::test::expect_orthonormal_columns(decomposition.v);
 }
 
 TEST(SvdDecompose, HandlesZeroColumnMatrix) {
@@ -150,8 +132,8 @@ TEST(SvdDecompose, HandlesZeroColumnMatrix) {
     EXPECT_NEAR(decomposition.s[0], 2.0, num::test::tolerance);
     EXPECT_NEAR(decomposition.s[1], 0.0, num::test::tolerance);
     expect_reconstruction(matrix, decomposition);
-    expect_orthonormal_columns(decomposition.u);
-    expect_orthonormal_columns(decomposition.v);
+    num::test::expect_orthonormal_columns(decomposition.u);
+    num::test::expect_orthonormal_columns(decomposition.v);
 }
 
 TEST(SvdDecompose, HandlesZeroMatrix) {
@@ -167,8 +149,8 @@ TEST(SvdDecompose, HandlesZeroMatrix) {
     EXPECT_EQ(decomposition.v.cols(), 2);
 
     expect_reconstruction(matrix, decomposition);
-    expect_orthonormal_columns(decomposition.u);
-    expect_orthonormal_columns(decomposition.v);
+    num::test::expect_orthonormal_columns(decomposition.u);
+    num::test::expect_orthonormal_columns(decomposition.v);
 }
 
 TEST(SvdDecompose, HandlesExtremeScales) {
@@ -237,8 +219,8 @@ TEST(SvdDecompose, SupportsFloat) {
     const num::Matrix<float> matrix{{2.0F, 0.0F}, {0.0F, 3.0F}};
     const auto decomposition = num::linalg::svd_decompose(matrix).value();
 
-    EXPECT_NEAR(decomposition.s[0], 3.0F, 1e-4F);
-    EXPECT_NEAR(decomposition.s[1], 2.0F, 1e-4F);
+    EXPECT_NEAR(decomposition.s[0], 3.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.s[1], 2.0F, num::test::float_tolerance);
 }
 
 TEST(SvdRank, CountsSingularValues) {
@@ -339,8 +321,8 @@ TEST(SvdLeastSquares, SupportsFloat) {
     const auto decomposition = num::linalg::svd_decompose(matrix).value();
 
     const auto solution = num::linalg::svd_least_squares(decomposition, rhs).value();
-    EXPECT_NEAR(solution[0], 2.0F, 1e-4F);
-    EXPECT_NEAR(solution[1], 3.0F, 1e-4F);
+    EXPECT_NEAR(solution[0], 2.0F, num::test::float_tolerance);
+    EXPECT_NEAR(solution[1], 3.0F, num::test::float_tolerance);
 }
 
 TEST(SvdPseudoInverse, Computes) {
@@ -395,10 +377,10 @@ TEST(SvdPseudoInverse, SupportsFloat) {
     const auto decomposition = num::linalg::svd_decompose(matrix).value();
     const auto inverse = num::linalg::svd_pseudo_inverse(decomposition);
 
-    EXPECT_NEAR(inverse(0, 0), 0.5F, 1e-4F);
-    EXPECT_NEAR(inverse(0, 1), 0.0F, 1e-4F);
-    EXPECT_NEAR(inverse(1, 0), 0.0F, 1e-4F);
-    EXPECT_NEAR(inverse(1, 1), 1.0F / 3.0F, 1e-4F);
+    EXPECT_NEAR(inverse(0, 0), 0.5F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(0, 1), 0.0F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(1, 0), 0.0F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(1, 1), 1.0F / 3.0F, num::test::float_tolerance);
 }
 
 TEST(SvdConditionNumber, Computes) {
@@ -434,5 +416,5 @@ TEST(SvdConditionNumber, SupportsFloat) {
     const num::Matrix<float> matrix{{4.0F, 0.0F}, {0.0F, 2.0F}};
     const auto decomposition = num::linalg::svd_decompose(matrix).value();
 
-    EXPECT_NEAR(num::linalg::svd_condition_number(decomposition), 2.0F, 1e-4F);
+    EXPECT_NEAR(num::linalg::svd_condition_number(decomposition), 2.0F, num::test::float_tolerance);
 }
