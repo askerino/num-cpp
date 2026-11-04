@@ -98,41 +98,62 @@ TEST(VectorNorms, AvoidsOverflowAndUnderflow) {
     EXPECT_DOUBLE_EQ(num::Vector<double>{1e308}.norm_l2(), 1e308);
 }
 
-TEST(VectorArithmetic, SupportsArithmetic) {
+TEST(VectorArithmetic, Adds) {
     const num::Vector<double> lhs{1.0, 2.0, 3.0};
     const num::Vector<double> rhs{4.0, 5.0, 6.0};
-
     const auto sum = lhs + rhs;
-    const auto difference = rhs - lhs;
-    const auto left_scaled = 2.0 * lhs;
-    const auto right_scaled = lhs * 2.0;
-    const auto divided = rhs / 2.0;
 
     EXPECT_DOUBLE_EQ(sum[0], 5.0);
     EXPECT_DOUBLE_EQ(sum[1], 7.0);
     EXPECT_DOUBLE_EQ(sum[2], 9.0);
+}
+
+TEST(VectorArithmetic, Subtracts) {
+    const num::Vector<double> lhs{4.0, 5.0, 6.0};
+    const num::Vector<double> rhs{1.0, 2.0, 3.0};
+    const auto difference = lhs - rhs;
+
     EXPECT_DOUBLE_EQ(difference[0], 3.0);
     EXPECT_DOUBLE_EQ(difference[1], 3.0);
     EXPECT_DOUBLE_EQ(difference[2], 3.0);
+}
+
+TEST(VectorArithmetic, Scales) {
+    const num::Vector<double> vector{1.0, 2.0, 3.0};
+    const auto left_scaled = 2.0 * vector;
+    const auto right_scaled = vector * 2.0;
+
     EXPECT_DOUBLE_EQ(left_scaled[0], 2.0);
     EXPECT_DOUBLE_EQ(left_scaled[1], 4.0);
     EXPECT_DOUBLE_EQ(left_scaled[2], 6.0);
     EXPECT_DOUBLE_EQ(right_scaled[0], 2.0);
     EXPECT_DOUBLE_EQ(right_scaled[1], 4.0);
     EXPECT_DOUBLE_EQ(right_scaled[2], 6.0);
+}
+
+TEST(VectorArithmetic, Divides) {
+    const num::Vector<double> vector{4.0, 5.0, 6.0};
+    const auto divided = vector / 2.0;
+
     EXPECT_DOUBLE_EQ(divided[0], 2.0);
     EXPECT_DOUBLE_EQ(divided[1], 2.5);
     EXPECT_DOUBLE_EQ(divided[2], 3.0);
-    EXPECT_DOUBLE_EQ(lhs.dot(rhs), 32.0);
 }
 
-TEST(VectorArithmetic, SupportsUnaryMinus) {
+TEST(VectorArithmetic, Negates) {
     const num::Vector<double> vector{1.0, -2.0, 3.0};
     const auto negated = -vector;
 
     EXPECT_DOUBLE_EQ(negated[0], -1.0);
     EXPECT_DOUBLE_EQ(negated[1], 2.0);
     EXPECT_DOUBLE_EQ(negated[2], -3.0);
+}
+
+TEST(VectorArithmetic, ComputesDotProduct) {
+    const num::Vector<double> lhs{1.0, 2.0, 3.0};
+    const num::Vector<double> rhs{4.0, 5.0, 6.0};
+
+    EXPECT_DOUBLE_EQ(lhs.dot(rhs), 32.0);
 }
 
 TEST(VectorArithmetic, ThrowsOnSizeMismatch) {
