@@ -54,6 +54,12 @@ TEST(EigenDecompose, ReturnsOrthonormalEigenvectors) {
     num::test::expect_orthonormal_columns(decomposition.vectors);
 }
 
+TEST(EigenDecompose, OrientsEigenvectors) {
+    const auto decomposition = num::linalg::eigen_decompose(symmetric_matrix()).value();
+
+    num::test::expect_oriented_columns(decomposition.vectors);
+}
+
 TEST(EigenDecompose, HandlesSingleElementMatrix) {
     const num::Matrix<double> matrix{{4.0}};
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
