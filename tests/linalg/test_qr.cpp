@@ -103,6 +103,19 @@ TEST(QrDecompose, ThrowsOnInvalidInputs) {
     EXPECT_THROW(static_cast<void>(num::linalg::qr_decompose(wide)), std::invalid_argument);
 }
 
+TEST(QrDecompose, SupportsFloat) {
+    const num::Matrix<float> matrix{{3.0F, 0.0F}, {4.0F, 5.0F}};
+    const auto decomposition = num::linalg::qr_decompose(matrix).value();
+
+    EXPECT_NEAR(decomposition.q(0, 0), 0.6F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.q(1, 0), 0.8F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.q(0, 1), -0.8F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.q(1, 1), 0.6F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.r(0, 0), 5.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.r(0, 1), 4.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.r(1, 1), 3.0F, num::test::float_tolerance);
+}
+
 TEST(QrLeastSquares, SolvesSquareSystem) {
     const auto matrix = square_matrix();
     const num::Vector<double> rhs{8.0, 6.0, 5.0};
@@ -158,4 +171,14 @@ TEST(QrLeastSquares, ThrowsOnDimensionMismatch) {
 
     EXPECT_THROW(static_cast<void>(num::linalg::qr_least_squares(decomposition, rhs)),
                  std::invalid_argument);
+}
+
+TEST(QrLeastSquares, SupportsFloat) {
+    const num::Matrix<float> matrix{{1.0F, 0.0F}, {1.0F, 1.0F}, {1.0F, 2.0F}};
+    const num::Vector<float> rhs{1.0F, 2.0F, 4.0F};
+    const auto decomposition = num::linalg::qr_decompose(matrix).value();
+    const auto solution = num::linalg::qr_least_squares(decomposition, rhs).value();
+
+    EXPECT_NEAR(solution[0], 5.0F / 6.0F, num::test::float_tolerance);
+    EXPECT_NEAR(solution[1], 1.5F, num::test::float_tolerance);
 }

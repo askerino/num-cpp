@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <limits>
+#include <numbers>
 #include <stdexcept>
 
 namespace {
@@ -78,10 +79,27 @@ TEST(CholeskyDecompose, ThrowsOnInvalidInputs) {
                  std::invalid_argument);
 }
 
+TEST(CholeskyDecompose, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 2.0F}, {2.0F, 3.0F}};
+    const auto decomposition = num::linalg::cholesky_decompose(matrix).value();
+
+    EXPECT_NEAR(decomposition.lower(0, 0), 2.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.lower(1, 0), 1.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.lower(1, 1), std::numbers::sqrt2_v<float>,
+                num::test::float_tolerance);
+}
+
 TEST(CholeskyDeterminant, Computes) {
     const auto decomposition = num::linalg::cholesky_decompose(spd_matrix()).value();
 
     EXPECT_DOUBLE_EQ(num::linalg::cholesky_determinant(decomposition), 36.0);
+}
+
+TEST(CholeskyDeterminant, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 2.0F}, {2.0F, 3.0F}};
+    const auto decomposition = num::linalg::cholesky_decompose(matrix).value();
+
+    EXPECT_NEAR(num::linalg::cholesky_determinant(decomposition), 8.0F, num::test::float_tolerance);
 }
 
 TEST(CholeskySolve, Solves) {
@@ -121,6 +139,16 @@ TEST(CholeskySolve, ThrowsOnDimensionMismatch) {
                  std::invalid_argument);
 }
 
+TEST(CholeskySolve, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 2.0F}, {2.0F, 3.0F}};
+    const num::Vector<float> rhs{6.0F, 5.0F};
+    const auto decomposition = num::linalg::cholesky_decompose(matrix).value();
+    const auto solution = num::linalg::cholesky_solve(decomposition, rhs).value();
+
+    EXPECT_NEAR(solution[0], 1.0F, num::test::float_tolerance);
+    EXPECT_NEAR(solution[1], 1.0F, num::test::float_tolerance);
+}
+
 TEST(CholeskyInverse, Computes) {
     const auto matrix = spd_matrix();
     const auto inverse =
@@ -129,4 +157,15 @@ TEST(CholeskyInverse, Computes) {
 
     num::test::expect_matrix_near(matrix_times_inverse,
                                   num::Matrix<double>::identity(matrix.rows()));
+}
+
+TEST(CholeskyInverse, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 2.0F}, {2.0F, 3.0F}};
+    const auto inverse =
+        num::linalg::cholesky_inverse(num::linalg::cholesky_decompose(matrix).value());
+
+    EXPECT_NEAR(inverse(0, 0), 0.375F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(0, 1), -0.25F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(1, 0), -0.25F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(1, 1), 0.5F, num::test::float_tolerance);
 }
