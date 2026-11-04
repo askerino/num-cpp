@@ -116,6 +116,17 @@ TEST(EigenDecompose, ReportsNonConvergence) {
     EXPECT_EQ(decomposition.error(), num::Error::no_convergence);
 }
 
+TEST(EigenDecompose, ThrowsOnNonFiniteTolerance) {
+    const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
+
+    EXPECT_THROW(static_cast<void>(num::linalg::eigen_decompose(
+                     matrix, std::numeric_limits<double>::quiet_NaN())),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(
+                     num::linalg::eigen_decompose(matrix, std::numeric_limits<double>::infinity())),
+                 std::invalid_argument);
+}
+
 TEST(EigenDecompose, ThrowsOnNegativeTolerance) {
     const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
 

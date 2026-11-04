@@ -11,10 +11,8 @@
 #include <concepts>
 #include <cstddef>
 #include <expected>
-#include <format>
 #include <limits>
 #include <numeric>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -206,10 +204,7 @@ svd_decompose(const Matrix<T>& matrix,
               T tolerance = static_cast<T>(detail::svd::tolerance_epsilon_multiplier) *
                             std::numeric_limits<T>::epsilon(),
               std::size_t max_sweeps = detail::svd::default_max_sweeps) {
-    if (!std::isfinite(tolerance) || tolerance < T{}) {
-        throw std::invalid_argument(
-            std::format("tolerance must be finite and non-negative: got {}", tolerance));
-    }
+    detail::require_valid_tolerance(tolerance);
     detail::require_non_empty_matrix(matrix);
     if (!detail::all_finite(matrix)) {
         return std::unexpected(Error::non_finite_input);
