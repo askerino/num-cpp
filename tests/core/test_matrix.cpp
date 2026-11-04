@@ -40,7 +40,7 @@ TEST(MatrixConstruction, ConstructsFromInitializerList) {
     EXPECT_DOUBLE_EQ(matrix(1, 2), 6.0);
 }
 
-TEST(MatrixConstruction, CreatesZero) {
+TEST(MatrixConstruction, CreatesZeros) {
     const auto zeros = num::Matrix<double>::zeros(2, 3);
 
     EXPECT_EQ(zeros.rows(), 2);
@@ -302,7 +302,7 @@ TEST(MatrixArithmetic, ThrowsOnDimensionMismatch) {
     EXPECT_THROW(static_cast<void>(matrix * vector), std::invalid_argument);
 }
 
-TEST(MatrixTransformations, ComputesTransposes) {
+TEST(MatrixTransformations, Transposes) {
     const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
     const auto transposed = matrix.transpose();
 

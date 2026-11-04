@@ -67,7 +67,7 @@ TEST(LuDecompose, ReportsSingularMatrix) {
     EXPECT_EQ(zero_decomposition.error(), num::Error::singular_matrix);
 }
 
-TEST(LuDecompose, ThrowsOnInvalidInputs) {
+TEST(LuDecompose, ThrowsOnInvalidShape) {
     const num::Matrix<double> empty;
     const num::Matrix<double> non_square(2, 3);
 
@@ -111,7 +111,7 @@ TEST(LuSolve, Solves) {
     num::test::expect_vector_near(solution, num::Vector<double>{1.0, -2.0, -2.0});
 }
 
-TEST(LuSolve, ReportsNonFiniteRhsInput) {
+TEST(LuSolve, ReportsNonFiniteInput) {
     const auto decomposition = num::linalg::lu_decompose(num::Matrix<double>::identity(2)).value();
     const num::Vector<double> non_finite_rhs{1.0, std::numeric_limits<double>::quiet_NaN()};
     const auto solution = num::linalg::lu_solve(decomposition, non_finite_rhs);

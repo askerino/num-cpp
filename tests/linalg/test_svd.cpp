@@ -163,7 +163,7 @@ TEST(SvdDecompose, HandlesExtremeScales) {
     num::test::expect_vector_near(huge_decomposition.s / 1e300, num::Vector<double>{3.0, 1.0});
 }
 
-TEST(SvdDecompose, SucceedsWhenAlreadyConverged) {
+TEST(SvdDecompose, HandlesAlreadyConvergedMatrix) {
     const num::Matrix<double> matrix{{1.0, 1.0}, {1.0, -1.0}};
     const auto decomposition = num::linalg::svd_decompose(matrix, 0.0, 0);
 
@@ -178,7 +178,7 @@ TEST(SvdDecompose, ReportsNonFiniteInput) {
     EXPECT_EQ(decomposition.error(), num::Error::non_finite_input);
 }
 
-TEST(SvdDecompose, ReportsNonConvergence) {
+TEST(SvdDecompose, ReportsNoConvergence) {
     const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
     const auto decomposition = num::linalg::svd_decompose(matrix, 0.0, 0);
 
@@ -204,7 +204,7 @@ TEST(SvdDecompose, ThrowsOnNonFiniteTolerance) {
                  std::invalid_argument);
 }
 
-TEST(SvdDecompose, ThrowsOnInvalidInputs) {
+TEST(SvdDecompose, ThrowsOnInvalidShape) {
     const num::Matrix<double> empty;
     const num::Matrix<double> empty_rows(0, 3);
     const num::Matrix<double> empty_columns(3, 0);
@@ -296,7 +296,7 @@ TEST(SvdLeastSquares, SolvesInconsistentRankDeficientSystem) {
     num::test::expect_vector_near(solution, num::Vector<double>{1.0, 0.0});
 }
 
-TEST(SvdLeastSquares, ReportsNonFiniteRhsInput) {
+TEST(SvdLeastSquares, ReportsNonFiniteInput) {
     const num::Matrix<double> matrix{{1.0, 0.0}, {0.0, 1.0}};
     const auto decomposition = num::linalg::svd_decompose(matrix).value();
     const num::Vector<double> rhs{1.0, std::numeric_limits<double>::quiet_NaN()};
