@@ -31,7 +31,7 @@ TEST(VectorConstruction, ConstructsFromInitializerList) {
     EXPECT_DOUBLE_EQ(vector[0], 5.0);
 }
 
-TEST(VectorConstruction, CreatesZero) {
+TEST(VectorConstruction, CreatesZeros) {
     const auto zeros = num::Vector<double>::zeros(3);
 
     EXPECT_EQ(zeros.size(), 3);

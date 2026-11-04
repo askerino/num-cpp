@@ -41,7 +41,7 @@ TEST(EigenDecompose, SatisfiesAEqualsVLambdaVt) {
     expect_reconstruction(matrix, decomposition);
 }
 
-TEST(EigenDecompose, ReturnsEigenvaluesAscending) {
+TEST(EigenDecompose, ReturnsEigenvaluesInAscendingOrder) {
     const num::Matrix<double> matrix{{1.0, 0.0, 0.0}, {0.0, 3.0, 0.0}, {0.0, 0.0, 2.0}};
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
 
@@ -113,7 +113,7 @@ TEST(EigenDecompose, ReportsNonFiniteInput) {
     EXPECT_EQ(decomposition.error(), num::Error::non_finite_input);
 }
 
-TEST(EigenDecompose, ReportsNonSymmetricInput) {
+TEST(EigenDecompose, ReportsNonSymmetric) {
     const num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
     const auto decomposition = num::linalg::eigen_decompose(matrix);
 
@@ -121,7 +121,7 @@ TEST(EigenDecompose, ReportsNonSymmetricInput) {
     EXPECT_EQ(decomposition.error(), num::Error::non_symmetric);
 }
 
-TEST(EigenDecompose, ReportsNonConvergence) {
+TEST(EigenDecompose, ReportsNoConvergence) {
     const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
     const auto decomposition = num::linalg::eigen_decompose(matrix, 0.0, 0);
 
@@ -147,7 +147,7 @@ TEST(EigenDecompose, ThrowsOnNegativeTolerance) {
                  std::invalid_argument);
 }
 
-TEST(EigenDecompose, ThrowsOnInvalidInputs) {
+TEST(EigenDecompose, ThrowsOnInvalidShape) {
     const num::Matrix<double> empty;
     const num::Matrix<double> non_square(2, 3);
 

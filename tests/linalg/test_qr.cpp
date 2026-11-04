@@ -39,7 +39,7 @@ TEST(QrDecompose, ReturnsOrthonormalColumns) {
     num::test::expect_orthonormal_columns(decomposition.q);
 }
 
-TEST(QrDecompose, ReturnsUpperTriangular) {
+TEST(QrDecompose, ReturnsUpperTriangularFactor) {
     const auto decomposition = num::linalg::qr_decompose(square_matrix()).value();
 
     num::test::expect_upper_triangular(decomposition.r);
@@ -87,7 +87,7 @@ TEST(QrDecompose, ReportsNonFiniteInput) {
     EXPECT_EQ(decomposition.error(), num::Error::non_finite_input);
 }
 
-TEST(QrDecompose, ReportsRankDeficientMatrix) {
+TEST(QrDecompose, ReportsRankDeficient) {
     const num::Matrix<double> rank_deficient{{1.0, 0.0}, {2.0, 0.0}};
     const auto decomposition = num::linalg::qr_decompose(rank_deficient);
 
@@ -95,7 +95,7 @@ TEST(QrDecompose, ReportsRankDeficientMatrix) {
     EXPECT_EQ(decomposition.error(), num::Error::rank_deficient);
 }
 
-TEST(QrDecompose, ThrowsOnInvalidInputs) {
+TEST(QrDecompose, ThrowsOnInvalidShape) {
     const num::Matrix<double> empty;
     const num::Matrix<double> wide(2, 3);
 
@@ -145,7 +145,7 @@ TEST(QrLeastSquares, SolvesOverdeterminedSystem) {
     num::test::expect_vector_near(solution, num::Vector<double>{7.0 / 6.0, 0.5});
 }
 
-TEST(QrLeastSquares, ResidualIsOrthogonalToColumns) {
+TEST(QrLeastSquares, SatisfiesNormalEquations) {
     const auto matrix = tall_matrix();
     const num::Vector<double> rhs{1.0, 2.0, 2.0};
     const auto decomposition = num::linalg::qr_decompose(matrix).value();
@@ -156,7 +156,7 @@ TEST(QrLeastSquares, ResidualIsOrthogonalToColumns) {
     num::test::expect_vector_near(normal_residual, num::Vector<double>{0.0, 0.0});
 }
 
-TEST(QrLeastSquares, ReportsNonFiniteRhsInput) {
+TEST(QrLeastSquares, ReportsNonFiniteInput) {
     const auto decomposition = num::linalg::qr_decompose(tall_matrix()).value();
     const num::Vector<double> rhs{1.0, std::numeric_limits<double>::quiet_NaN(), 2.0};
     const auto solution = num::linalg::qr_least_squares(decomposition, rhs);

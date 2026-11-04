@@ -30,7 +30,7 @@ TEST(CholeskyDecompose, SatisfiesAEqualsLLt) {
     num::test::expect_matrix_near(product, matrix);
 }
 
-TEST(CholeskyDecompose, ReturnsLowerTriangular) {
+TEST(CholeskyDecompose, ReturnsLowerTriangularFactor) {
     const auto decomposition = num::linalg::cholesky_decompose(spd_matrix()).value();
 
     num::test::expect_lower_triangular(decomposition.lower);
@@ -70,7 +70,7 @@ TEST(CholeskyDecompose, ReportsNonPositiveDefinite) {
     EXPECT_EQ(zero_result.error(), num::Error::non_positive_definite);
 }
 
-TEST(CholeskyDecompose, ThrowsOnInvalidInputs) {
+TEST(CholeskyDecompose, ThrowsOnInvalidShape) {
     const num::Matrix<double> empty;
     const num::Matrix<double> non_square(2, 3);
 
@@ -122,7 +122,7 @@ TEST(CholeskySolve, MatchesLuSolve) {
     num::test::expect_vector_near(cholesky_solution, lu_solution);
 }
 
-TEST(CholeskySolve, ReportsNonFiniteRhsInput) {
+TEST(CholeskySolve, ReportsNonFiniteInput) {
     const auto decomposition = num::linalg::cholesky_decompose(spd_matrix()).value();
     const num::Vector<double> non_finite_rhs{1.0, std::numeric_limits<double>::quiet_NaN(), 0.0};
     const auto solution = num::linalg::cholesky_solve(decomposition, non_finite_rhs);
