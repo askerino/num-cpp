@@ -1,7 +1,9 @@
 #include "num/core/matrix.hpp"
+#include "support/comparison.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
@@ -53,9 +55,9 @@ TEST(MatrixConstruction, CreatesIdentity) {
     EXPECT_EQ(identity.rows(), 3);
     EXPECT_EQ(identity.cols(), 3);
     EXPECT_EQ(identity.size(), 9);
-    for (std::size_t row = 0; row < identity.rows(); ++row) {
-        for (std::size_t column = 0; column < identity.cols(); ++column) {
-            EXPECT_DOUBLE_EQ(identity(row, column), row == column ? 1.0 : 0.0);
+    for (std::size_t i = 0; i < identity.rows(); ++i) {
+        for (std::size_t j = 0; j < identity.cols(); ++j) {
+            EXPECT_DOUBLE_EQ(identity(i, j), i == j ? 1.0 : 0.0);
         }
     }
 }
@@ -67,9 +69,9 @@ TEST(MatrixConstruction, CreatesFromDiagonal) {
     EXPECT_EQ(matrix.rows(), 3);
     EXPECT_EQ(matrix.cols(), 3);
     EXPECT_EQ(matrix.size(), 9);
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
-        for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            EXPECT_DOUBLE_EQ(matrix(row, column), row == column ? diagonal[row] : 0.0);
+    for (std::size_t i = 0; i < matrix.rows(); ++i) {
+        for (std::size_t j = 0; j < matrix.cols(); ++j) {
+            EXPECT_DOUBLE_EQ(matrix(i, j), i == j ? diagonal[i] : 0.0);
         }
     }
 }
@@ -176,7 +178,7 @@ TEST(MatrixNorms, ComputesNorms) {
 
     EXPECT_DOUBLE_EQ(matrix.norm_l1(), 9.0);
     EXPECT_DOUBLE_EQ(matrix.norm_infinity(), 15.0);
-    EXPECT_NEAR(matrix.norm_frobenius(), std::sqrt(91.0), 1e-12);
+    EXPECT_NEAR(matrix.norm_frobenius(), std::sqrt(91.0), num::test::tolerance);
 }
 
 TEST(MatrixNorms, ComputesEmptyNorms) {

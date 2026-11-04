@@ -7,6 +7,22 @@
 #include <numbers>
 #include <stdexcept>
 
+namespace {
+
+num::Matrix<double> symmetric_matrix() {
+    return {
+        {4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -1.0}, {2.0, 1.0, -1.0, 5.0}};
+}
+
+void expect_reconstruction(const num::Matrix<double>& matrix,
+                           const num::linalg::EigenDecomposition<double>& decomposition) {
+    const auto lambda = num::Matrix<double>::from_diagonal(decomposition.values);
+    num::test::expect_matrix_near(
+        decomposition.vectors * lambda * decomposition.vectors.transpose(), matrix);
+}
+
+} // namespace
+
 TEST(EigenDecompose, ComputesKnownDecomposition) {
     const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
@@ -19,13 +35,10 @@ TEST(EigenDecompose, ComputesKnownDecomposition) {
 }
 
 TEST(EigenDecompose, SatisfiesAEqualsVLambdaVt) {
-    const auto matrix = num::Matrix<double>{
-        {4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -1.0}, {2.0, 1.0, -1.0, 5.0}};
+    const auto matrix = symmetric_matrix();
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
-    const auto lambda = num::Matrix<double>::from_diagonal(decomposition.values);
 
-    num::test::expect_matrix_near(
-        decomposition.vectors * lambda * decomposition.vectors.transpose(), matrix);
+    expect_reconstruction(matrix, decomposition);
 }
 
 TEST(EigenDecompose, ReturnsEigenvaluesAscending) {
@@ -36,12 +49,9 @@ TEST(EigenDecompose, ReturnsEigenvaluesAscending) {
 }
 
 TEST(EigenDecompose, ReturnsOrthonormalEigenvectors) {
-    const auto matrix = num::Matrix<double>{
-        {4.0, 1.0, -2.0, 2.0}, {1.0, 2.0, 0.0, 1.0}, {-2.0, 0.0, 3.0, -1.0}, {2.0, 1.0, -1.0, 5.0}};
-    const auto decomposition = num::linalg::eigen_decompose(matrix).value();
+    const auto decomposition = num::linalg::eigen_decompose(symmetric_matrix()).value();
 
-    num::test::expect_matrix_near(decomposition.vectors.transpose() * decomposition.vectors,
-                                  num::Matrix<double>::identity(matrix.rows()));
+    num::test::expect_orthonormal_columns(decomposition.vectors);
 }
 
 TEST(EigenDecompose, HandlesSingleElementMatrix) {
@@ -85,10 +95,7 @@ TEST(EigenDecompose, HandlesRepeatedEigenvalues) {
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
 
     num::test::expect_vector_near(decomposition.values, num::Vector<double>{2.0, 2.0});
-    num::test::expect_matrix_near(decomposition.vectors *
-                                      num::Matrix<double>::from_diagonal(decomposition.values) *
-                                      decomposition.vectors.transpose(),
-                                  matrix);
+    expect_reconstruction(matrix, decomposition);
 }
 
 TEST(EigenDecompose, ReportsNonFiniteInput) {
@@ -147,6 +154,6 @@ TEST(EigenDecompose, SupportsFloat) {
     const num::Matrix<float> matrix{{2.0F, 1.0F}, {1.0F, 2.0F}};
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
 
-    EXPECT_NEAR(decomposition.values[0], 1.0F, 1e-4F);
-    EXPECT_NEAR(decomposition.values[1], 3.0F, 1e-4F);
+    EXPECT_NEAR(decomposition.values[0], 1.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.values[1], 3.0F, num::test::float_tolerance);
 }

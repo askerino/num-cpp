@@ -17,9 +17,9 @@ TEST(LuDecompose, SatisfiesPAEqualsLU) {
     ASSERT_EQ(decomposition.permutation.size(), matrix.rows());
 
     num::Matrix<double> permuted(matrix.rows(), matrix.cols());
-    for (std::size_t row = 0; row < matrix.rows(); ++row) {
-        for (std::size_t column = 0; column < matrix.cols(); ++column) {
-            permuted(row, column) = matrix(decomposition.permutation[row], column);
+    for (std::size_t i = 0; i < matrix.rows(); ++i) {
+        for (std::size_t j = 0; j < matrix.cols(); ++j) {
+            permuted(i, j) = matrix(decomposition.permutation[i], j);
         }
     }
     num::test::expect_matrix_near(decomposition.lower * decomposition.upper, permuted);
@@ -28,17 +28,12 @@ TEST(LuDecompose, SatisfiesPAEqualsLU) {
 TEST(LuDecompose, ReturnsTriangularFactors) {
     const auto matrix = pivot_matrix();
     const auto decomposition = num::linalg::lu_decompose(matrix).value();
-    const std::size_t n = matrix.rows();
 
-    for (std::size_t row = 0; row < n; ++row) {
-        EXPECT_DOUBLE_EQ(decomposition.lower(row, row), 1.0);
-        for (std::size_t column = row + 1; column < n; ++column) {
-            EXPECT_DOUBLE_EQ(decomposition.lower(row, column), 0.0);
-        }
-        for (std::size_t column = 0; column < row; ++column) {
-            EXPECT_DOUBLE_EQ(decomposition.upper(row, column), 0.0);
-        }
+    for (std::size_t i = 0; i < matrix.rows(); ++i) {
+        EXPECT_DOUBLE_EQ(decomposition.lower(i, i), 1.0);
     }
+    num::test::expect_lower_triangular(decomposition.lower);
+    num::test::expect_upper_triangular(decomposition.upper);
 }
 
 TEST(LuDecompose, CountsRowSwaps) {

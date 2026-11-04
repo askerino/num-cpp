@@ -2,7 +2,6 @@
 #include "num/linalg/qr.hpp"
 #include "support/comparison.hpp"
 
-#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
@@ -36,19 +35,14 @@ TEST(QrDecompose, SatisfiesAEqualsQR) {
 TEST(QrDecompose, ReturnsOrthonormalColumns) {
     const auto matrix = square_matrix();
     const auto decomposition = num::linalg::qr_decompose(matrix).value();
-    const auto product = decomposition.q.transpose() * decomposition.q;
 
-    num::test::expect_matrix_near(product, num::Matrix<double>::identity(decomposition.q.cols()));
+    num::test::expect_orthonormal_columns(decomposition.q);
 }
 
 TEST(QrDecompose, ReturnsUpperTriangular) {
     const auto decomposition = num::linalg::qr_decompose(square_matrix()).value();
 
-    for (std::size_t row = 1; row < decomposition.r.rows(); ++row) {
-        for (std::size_t column = 0; column < row; ++column) {
-            EXPECT_DOUBLE_EQ(decomposition.r(row, column), 0.0);
-        }
-    }
+    num::test::expect_upper_triangular(decomposition.r);
 }
 
 TEST(QrDecompose, SupportsTallMatrices) {
@@ -61,8 +55,7 @@ TEST(QrDecompose, SupportsTallMatrices) {
     EXPECT_EQ(decomposition.r.cols(), matrix.cols());
 
     num::test::expect_matrix_near(decomposition.q * decomposition.r, matrix);
-    num::test::expect_matrix_near(decomposition.q.transpose() * decomposition.q,
-                                  num::Matrix<double>::identity(matrix.cols()));
+    num::test::expect_orthonormal_columns(decomposition.q);
 }
 
 TEST(QrDecompose, HandlesSingleElementMatrix) {
