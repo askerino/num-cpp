@@ -16,13 +16,15 @@ namespace num {
 /// @addtogroup core
 /// @{
 
+/// @note `Matrix<double>(2, 3)` creates a 2x3 zero matrix, whereas `Matrix<double>{{2.0, 3.0}}`
+/// creates a 1x2 matrix with those elements.
 template <std::floating_point T>
 class Matrix {
   public:
     Matrix() = default;
 
     /// @throws std::length_error If the requested matrix is too large.
-    Matrix(std::size_t rows, std::size_t cols)
+    explicit Matrix(std::size_t rows, std::size_t cols)
         : rows_(rows), cols_(cols), data_(checked_element_count(rows, cols), T{}) {}
 
     /// @throws std::invalid_argument If the rows have different lengths.
