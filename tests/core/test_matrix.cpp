@@ -128,6 +128,30 @@ TEST(MatrixAccess, ExtractsRowsAndColumns) {
     EXPECT_DOUBLE_EQ(single.column(0)[0], 7.0);
 }
 
+TEST(MatrixAccess, SupportsContainer) {
+    num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
+    const num::Matrix<double>& const_matrix = matrix;
+
+    auto* data = matrix.data();
+    data[0] = 5.0;
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 5.0);
+
+    const auto* const_data = const_matrix.data();
+    EXPECT_DOUBLE_EQ(const_data[0], 5.0);
+
+    EXPECT_EQ(matrix.size(), 4);
+    EXPECT_FALSE(matrix.empty());
+    EXPECT_TRUE(num::Matrix<double>{}.empty());
+    EXPECT_TRUE(num::Matrix<double>(0, 3).empty());
+    EXPECT_TRUE(num::Matrix<double>(3, 0).empty());
+
+    std::ranges::transform(matrix, matrix.begin(), [](double value) { return value * 2.0; });
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 10.0);
+    EXPECT_DOUBLE_EQ(matrix(0, 1), 4.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 0), 6.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 1), 8.0);
+}
+
 TEST(MatrixAccess, ExtractsEmptyRowsAndColumns) {
     const num::Matrix<double> no_rows(0, 3);
     EXPECT_TRUE(no_rows.column(2).empty());
@@ -155,56 +179,6 @@ TEST(MatrixAccess, ThrowsOnOutOfRangeRowOrColumn) {
 
     const num::Matrix<double> no_columns(3, 0);
     EXPECT_THROW(static_cast<void>(no_columns.column(0)), std::out_of_range);
-}
-
-TEST(MatrixAccess, SupportsContainer) {
-    num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
-    const num::Matrix<double>& const_matrix = matrix;
-
-    auto* data = matrix.data();
-    data[0] = 5.0;
-    EXPECT_DOUBLE_EQ(matrix(0, 0), 5.0);
-
-    const auto* const_data = const_matrix.data();
-    EXPECT_DOUBLE_EQ(const_data[0], 5.0);
-
-    EXPECT_EQ(matrix.size(), 4);
-    EXPECT_FALSE(matrix.empty());
-    EXPECT_TRUE(num::Matrix<double>{}.empty());
-    EXPECT_TRUE(num::Matrix<double>(0, 3).empty());
-    EXPECT_TRUE(num::Matrix<double>(3, 0).empty());
-
-    std::ranges::transform(matrix, matrix.begin(), [](double value) { return value * 2.0; });
-    EXPECT_DOUBLE_EQ(matrix(0, 0), 10.0);
-    EXPECT_DOUBLE_EQ(matrix(0, 1), 4.0);
-    EXPECT_DOUBLE_EQ(matrix(1, 0), 6.0);
-    EXPECT_DOUBLE_EQ(matrix(1, 1), 8.0);
-}
-
-TEST(MatrixNorms, ComputesNorms) {
-    const num::Matrix<double> matrix{{1.0, -2.0, 3.0}, {-4.0, 5.0, -6.0}};
-
-    EXPECT_DOUBLE_EQ(matrix.norm_l1(), 9.0);
-    EXPECT_DOUBLE_EQ(matrix.norm_infinity(), 15.0);
-    EXPECT_NEAR(matrix.norm_frobenius(), std::sqrt(91.0), num::test::tolerance);
-}
-
-TEST(MatrixNorms, ComputesEmptyNorms) {
-    const num::Matrix<double> empty;
-    const num::Matrix<double> no_rows(0, 3);
-    const num::Matrix<double> no_columns(3, 0);
-
-    EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
-    EXPECT_DOUBLE_EQ(no_rows.norm_infinity(), 0.0);
-    EXPECT_DOUBLE_EQ(no_columns.norm_frobenius(), 0.0);
-}
-
-TEST(MatrixNorms, AvoidsOverflowAndUnderflow) {
-    const num::Matrix<double> huge_matrix{{1e200, 1e200}};
-    const num::Matrix<double> tiny_matrix{{1e-200, 1e-200}};
-
-    EXPECT_NEAR(huge_matrix.norm_frobenius(), 1e200 * std::numbers::sqrt2, 1e190);
-    EXPECT_NEAR(tiny_matrix.norm_frobenius(), 1e-200 * std::numbers::sqrt2, 1e-210);
 }
 
 TEST(MatrixArithmetic, Adds) {
@@ -300,6 +274,32 @@ TEST(MatrixArithmetic, ThrowsOnDimensionMismatch) {
     EXPECT_THROW(static_cast<void>(matrix - different_dimension), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(matrix * different_dimension), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(matrix * vector), std::invalid_argument);
+}
+
+TEST(MatrixNorms, ComputesNorms) {
+    const num::Matrix<double> matrix{{1.0, -2.0, 3.0}, {-4.0, 5.0, -6.0}};
+
+    EXPECT_DOUBLE_EQ(matrix.norm_l1(), 9.0);
+    EXPECT_DOUBLE_EQ(matrix.norm_infinity(), 15.0);
+    EXPECT_NEAR(matrix.norm_frobenius(), std::sqrt(91.0), num::test::tolerance);
+}
+
+TEST(MatrixNorms, ComputesEmptyNorms) {
+    const num::Matrix<double> empty;
+    const num::Matrix<double> no_rows(0, 3);
+    const num::Matrix<double> no_columns(3, 0);
+
+    EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
+    EXPECT_DOUBLE_EQ(no_rows.norm_infinity(), 0.0);
+    EXPECT_DOUBLE_EQ(no_columns.norm_frobenius(), 0.0);
+}
+
+TEST(MatrixNorms, AvoidsOverflowAndUnderflow) {
+    const num::Matrix<double> huge_matrix{{1e200, 1e200}};
+    const num::Matrix<double> tiny_matrix{{1e-200, 1e-200}};
+
+    EXPECT_NEAR(huge_matrix.norm_frobenius(), 1e200 * std::numbers::sqrt2, 1e190);
+    EXPECT_NEAR(tiny_matrix.norm_frobenius(), 1e-200 * std::numbers::sqrt2, 1e-210);
 }
 
 TEST(MatrixTransformations, Transposes) {
