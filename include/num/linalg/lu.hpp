@@ -11,6 +11,7 @@
 #include <concepts>
 #include <cstddef>
 #include <expected>
+#include <numeric>
 #include <vector>
 
 namespace num::linalg {
@@ -59,9 +60,7 @@ template <std::floating_point T>
     Matrix<T> lower(n, n);
     Matrix<T> upper = matrix;
     std::vector<std::size_t> permutation(n);
-    for (std::size_t i = 0; i < n; ++i) {
-        permutation[i] = i;
-    }
+    std::ranges::iota(permutation, std::size_t{0});
     std::size_t row_swaps{};
 
     for (std::size_t k = 0; k < n; ++k) {
