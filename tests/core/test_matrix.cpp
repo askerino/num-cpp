@@ -294,7 +294,7 @@ TEST(MatrixNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(no_columns.norm_frobenius(), 0.0);
 }
 
-TEST(MatrixNorms, AvoidsOverflowAndUnderflow) {
+TEST(MatrixNorms, HandlesExtremeScales) {
     const num::Matrix<double> huge_matrix{{1e200, 1e200}};
     const num::Matrix<double> tiny_matrix{{1e-200, 1e-200}};
 
