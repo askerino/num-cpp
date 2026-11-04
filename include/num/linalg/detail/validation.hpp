@@ -52,4 +52,12 @@ void require_rhs_size(std::size_t system_size, const Vector<T>& rhs) {
     }
 }
 
+template <std::floating_point T>
+void require_valid_tolerance(T tolerance) {
+    if (!std::isfinite(tolerance) || tolerance < T{}) {
+        throw std::invalid_argument(
+            std::format("tolerance must be finite and non-negative: got {}", tolerance));
+    }
+}
+
 } // namespace num::linalg::detail
