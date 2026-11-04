@@ -51,28 +51,27 @@ template <std::floating_point T>
 
 template <std::floating_point T>
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-void rotate(Matrix<T>& matrix, Matrix<T>& eigenvectors, std::size_t p, std::size_t q) {
-    const auto rotation = jacobi::make_rotation(matrix(p, p), matrix(q, q), matrix(p, q));
+void rotate(Matrix<T>& a, Matrix<T>& eigenvectors, std::size_t p, std::size_t q) {
+    const T a_pp = a(p, p);
+    const T a_qq = a(q, q);
+    const T a_pq = a(p, q);
+    const auto rotation = jacobi::make_rotation(a_pp, a_qq, a_pq);
 
-    const T a_pp = matrix(p, p);
-    const T a_qq = matrix(q, q);
-    const T a_pq = matrix(p, q);
+    a(p, p) = a_pp - (rotation.tan * a_pq);
+    a(q, q) = a_qq + (rotation.tan * a_pq);
+    a(p, q) = T{};
+    a(q, p) = T{};
 
-    matrix(p, p) = a_pp - (rotation.tan * a_pq);
-    matrix(q, q) = a_qq + (rotation.tan * a_pq);
-    matrix(p, q) = T{};
-    matrix(q, p) = T{};
-
-    for (std::size_t i = 0; i < matrix.rows(); ++i) {
+    for (std::size_t i = 0; i < a.rows(); ++i) {
         if (i != p && i != q) {
-            const T a_ip = matrix(i, p);
-            const T a_iq = matrix(i, q);
+            const T a_ip = a(i, p);
+            const T a_iq = a(i, q);
             const T new_a_ip = (rotation.cos * a_ip) - (rotation.sin * a_iq);
             const T new_a_iq = (rotation.sin * a_ip) + (rotation.cos * a_iq);
-            matrix(i, p) = new_a_ip;
-            matrix(p, i) = new_a_ip;
-            matrix(i, q) = new_a_iq;
-            matrix(q, i) = new_a_iq;
+            a(i, p) = new_a_ip;
+            a(p, i) = new_a_ip;
+            a(i, q) = new_a_iq;
+            a(q, i) = new_a_iq;
         }
     }
 
@@ -143,26 +142,25 @@ eigen_decompose(const Matrix<T>& matrix,
     }
 
     const std::size_t n = matrix.rows();
-    Matrix<T> diagonalized_matrix = matrix;
+    Matrix<T> a = matrix;
     Matrix<T> eigenvectors = Matrix<T>::identity(n);
 
     std::size_t sweeps = 0;
-    while (!detail::eigen::is_converged(diagonalized_matrix, tolerance)) {
+    while (!detail::eigen::is_converged(a, tolerance)) {
         if (sweeps >= max_sweeps) {
             return std::unexpected(Error::no_convergence);
         }
         for (std::size_t p = 0; p < n; ++p) {
             for (std::size_t q = p + 1; q < n; ++q) {
-                if (diagonalized_matrix(p, q) != T{}) {
-                    detail::eigen::rotate(diagonalized_matrix, eigenvectors, p, q);
+                if (a(p, q) != T{}) {
+                    detail::eigen::rotate(a, eigenvectors, p, q);
                 }
             }
         }
         ++sweeps;
     }
 
-    auto [eigenvalues, sorted_eigenvectors] =
-        detail::eigen::sort_eigenpairs(diagonalized_matrix, eigenvectors);
+    auto [eigenvalues, sorted_eigenvectors] = detail::eigen::sort_eigenpairs(a, eigenvectors);
     detail::eigen::orient_eigenvectors(sorted_eigenvectors);
     return EigenDecomposition<T>{std::move(eigenvalues), std::move(sorted_eigenvectors)};
 }
