@@ -69,11 +69,11 @@ template <std::floating_point T>
 [[nodiscard]] ColumnGram<T> column_gram(const Matrix<T>& matrix, std::size_t p, std::size_t q) {
     ColumnGram<T> gram{};
     for (std::size_t i = 0; i < matrix.rows(); ++i) {
-        const T p_value = matrix(i, p);
-        const T q_value = matrix(i, q);
-        gram.alpha += p_value * p_value;
-        gram.beta += q_value * q_value;
-        gram.gamma += p_value * q_value;
+        const T a_ip = matrix(i, p);
+        const T a_iq = matrix(i, q);
+        gram.alpha += a_ip * a_ip;
+        gram.beta += a_iq * a_iq;
+        gram.gamma += a_ip * a_iq;
     }
     return gram;
 }
@@ -102,29 +102,29 @@ template <std::floating_point T>
 
 template <std::floating_point T>
 void fill_orthonormal_columns(Matrix<T>& u) {
-    const std::size_t rows = u.rows();
-    const std::size_t columns = u.cols();
+    const std::size_t m = u.rows();
+    const std::size_t n = u.cols();
 
-    std::vector<bool> has_direction(columns, false);
-    for (std::size_t column = 0; column < columns; ++column) {
-        has_direction[column] = column_norm(u, column) > T{};
+    std::vector<bool> has_direction(n, false);
+    for (std::size_t j = 0; j < n; ++j) {
+        has_direction[j] = column_norm(u, j) > T{};
     }
 
-    for (std::size_t column = 0; column < columns; ++column) {
-        if (has_direction[column]) {
+    for (std::size_t j = 0; j < n; ++j) {
+        if (has_direction[j]) {
             continue;
         }
 
-        Vector<T> best_candidate(rows);
+        Vector<T> best_candidate(m);
         T best_candidate_norm{};
-        for (std::size_t basis_index = 0; basis_index < rows; ++basis_index) {
-            Vector<T> candidate(rows);
+        for (std::size_t basis_index = 0; basis_index < m; ++basis_index) {
+            Vector<T> candidate(m);
             candidate[basis_index] = T{1};
-            for (std::size_t other = 0; other < columns; ++other) {
-                if (other == column || !has_direction[other]) {
+            for (std::size_t k = 0; k < n; ++k) {
+                if (k == j || !has_direction[k]) {
                     continue;
                 }
-                const Vector<T> existing_column = u.column(other);
+                const Vector<T> existing_column = u.column(k);
                 candidate -= existing_column.dot(candidate) * existing_column;
             }
 
@@ -135,27 +135,27 @@ void fill_orthonormal_columns(Matrix<T>& u) {
             }
         }
 
-        for (std::size_t row = 0; row < rows; ++row) {
-            u(row, column) = best_candidate[row] / best_candidate_norm;
+        for (std::size_t i = 0; i < m; ++i) {
+            u(i, j) = best_candidate[i] / best_candidate_norm;
         }
-        has_direction[column] = true;
+        has_direction[j] = true;
     }
 }
 
 template <std::floating_point T>
 void sort_singular_triplets(Matrix<T>& u, Vector<T>& s, Matrix<T>& v) {
-    const std::size_t columns = s.size();
+    const std::size_t n = s.size();
 
-    std::vector<std::size_t> order(columns);
+    std::vector<std::size_t> order(n);
     std::ranges::iota(order, std::size_t{0});
     std::stable_sort(order.begin(), order.end(),
                      [&s](std::size_t lhs, std::size_t rhs) { return s[lhs] > s[rhs]; });
 
-    Matrix<T> sorted_u(u.rows(), columns);
-    Vector<T> sorted_s(columns);
-    Matrix<T> sorted_v(v.rows(), columns);
+    Matrix<T> sorted_u(u.rows(), n);
+    Vector<T> sorted_s(n);
+    Matrix<T> sorted_v(v.rows(), n);
 
-    for (std::size_t k = 0; k < columns; ++k) {
+    for (std::size_t k = 0; k < n; ++k) {
         const std::size_t source = order[k];
         for (std::size_t i = 0; i < u.rows(); ++i) {
             sorted_u(i, k) = u(i, source);
@@ -174,20 +174,20 @@ void sort_singular_triplets(Matrix<T>& u, Vector<T>& s, Matrix<T>& v) {
 template <std::floating_point T>
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void orient_columns(Matrix<T>& u, Matrix<T>& v) {
-    for (std::size_t column = 0; column < u.cols(); ++column) {
+    for (std::size_t k = 0; k < u.cols(); ++k) {
         std::size_t largest = 0;
         for (std::size_t i = 1; i < u.rows(); ++i) {
-            if (std::abs(u(i, column)) > std::abs(u(largest, column))) {
+            if (std::abs(u(i, k)) > std::abs(u(largest, k))) {
                 largest = i;
             }
         }
 
-        if (u(largest, column) < T{}) {
+        if (u(largest, k) < T{}) {
             for (std::size_t i = 0; i < u.rows(); ++i) {
-                u(i, column) = -u(i, column);
+                u(i, k) = -u(i, k);
             }
             for (std::size_t i = 0; i < v.rows(); ++i) {
-                v(i, column) = -v(i, column);
+                v(i, k) = -v(i, k);
             }
         }
     }
@@ -211,46 +211,46 @@ svd_decompose(const Matrix<T>& matrix,
     }
 
     const bool is_wide = matrix.rows() < matrix.cols();
-    Matrix<T> work = is_wide ? matrix.transpose() : matrix;
-    const std::size_t rows = work.rows();
-    const std::size_t columns = work.cols();
+    Matrix<T> a = is_wide ? matrix.transpose() : matrix;
+    const std::size_t m = a.rows();
+    const std::size_t n = a.cols();
 
-    const T scale = detail::svd::max_abs(work);
+    const T scale = detail::svd::max_abs(a);
     if (scale > T{}) {
-        work /= scale;
+        a /= scale;
     }
 
-    Matrix<T> v = Matrix<T>::identity(columns);
+    Matrix<T> v = Matrix<T>::identity(n);
     std::size_t sweeps = 0;
-    while (!detail::svd::is_converged(work, tolerance)) {
+    while (!detail::svd::is_converged(a, tolerance)) {
         if (sweeps >= max_sweeps) {
             return std::unexpected(Error::no_convergence);
         }
 
-        for (std::size_t p = 0; p < columns; ++p) {
-            for (std::size_t q = p + 1; q < columns; ++q) {
-                const detail::svd::ColumnGram<T> gram = detail::svd::column_gram(work, p, q);
+        for (std::size_t p = 0; p < n; ++p) {
+            for (std::size_t q = p + 1; q < n; ++q) {
+                const detail::svd::ColumnGram<T> gram = detail::svd::column_gram(a, p, q);
                 if (std::abs(gram.gamma) <= tolerance * std::sqrt(gram.alpha * gram.beta)) {
                     continue;
                 }
 
                 const auto rotation =
                     detail::jacobi::make_rotation(gram.alpha, gram.beta, gram.gamma);
-                detail::jacobi::rotate_columns(work, p, q, rotation);
+                detail::jacobi::rotate_columns(a, p, q, rotation);
                 detail::jacobi::rotate_columns(v, p, q, rotation);
             }
         }
         ++sweeps;
     }
 
-    Vector<T> s(columns);
-    Matrix<T> u(rows, columns);
-    for (std::size_t j = 0; j < columns; ++j) {
-        const T norm = detail::svd::column_norm(work, j);
+    Vector<T> s(n);
+    Matrix<T> u(m, n);
+    for (std::size_t j = 0; j < n; ++j) {
+        const T norm = detail::svd::column_norm(a, j);
         s[j] = scale * norm;
         if (norm > T{}) {
-            for (std::size_t i = 0; i < rows; ++i) {
-                u(i, j) = work(i, j) / norm;
+            for (std::size_t i = 0; i < m; ++i) {
+                u(i, j) = a(i, j) / norm;
             }
         }
     }
