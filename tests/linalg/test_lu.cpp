@@ -75,6 +75,16 @@ TEST(LuDecompose, ThrowsOnInvalidInputs) {
     EXPECT_THROW(static_cast<void>(num::linalg::lu_decompose(non_square)), std::invalid_argument);
 }
 
+TEST(LuDecompose, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 3.0F}, {6.0F, 3.0F}};
+    const auto decomposition = num::linalg::lu_decompose(matrix).value();
+
+    EXPECT_NEAR(decomposition.lower(1, 0), 2.0F / 3.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.upper(0, 0), 6.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.upper(0, 1), 3.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.upper(1, 1), 1.0F, num::test::float_tolerance);
+}
+
 TEST(LuDeterminant, Computes) {
     const num::Matrix<double> no_swap{{2.0, 1.0}, {0.0, 3.0}};
     const num::Matrix<double> one_swap{{0.0, 1.0}, {1.0, 0.0}};
@@ -83,6 +93,13 @@ TEST(LuDeterminant, Computes) {
 
     EXPECT_DOUBLE_EQ(num::linalg::lu_determinant(no_swap_decomposition), 6.0);
     EXPECT_DOUBLE_EQ(num::linalg::lu_determinant(one_swap_decomposition), -1.0);
+}
+
+TEST(LuDeterminant, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 3.0F}, {6.0F, 3.0F}};
+    const auto decomposition = num::linalg::lu_decompose(matrix).value();
+
+    EXPECT_NEAR(num::linalg::lu_determinant(decomposition), -6.0F, num::test::float_tolerance);
 }
 
 TEST(LuSolve, Solves) {
@@ -112,6 +129,16 @@ TEST(LuSolve, ThrowsOnDimensionMismatch) {
                  std::invalid_argument);
 }
 
+TEST(LuSolve, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 3.0F}, {6.0F, 3.0F}};
+    const num::Vector<float> rhs{10.0F, 12.0F};
+    const auto decomposition = num::linalg::lu_decompose(matrix).value();
+    const auto solution = num::linalg::lu_solve(decomposition, rhs).value();
+
+    EXPECT_NEAR(solution[0], 1.0F, num::test::float_tolerance);
+    EXPECT_NEAR(solution[1], 2.0F, num::test::float_tolerance);
+}
+
 TEST(LuInverse, Computes) {
     const num::Matrix<double> matrix{{0.0, 2.0}, {1.0, 3.0}};
     const auto decomposition = num::linalg::lu_decompose(matrix).value();
@@ -120,4 +147,14 @@ TEST(LuInverse, Computes) {
 
     num::test::expect_matrix_near(matrix_times_inverse,
                                   num::Matrix<double>::identity(matrix.rows()));
+}
+
+TEST(LuInverse, SupportsFloat) {
+    const num::Matrix<float> matrix{{4.0F, 3.0F}, {6.0F, 3.0F}};
+    const auto inverse = num::linalg::lu_inverse(num::linalg::lu_decompose(matrix).value());
+
+    EXPECT_NEAR(inverse(0, 0), -0.5F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(0, 1), 0.5F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(1, 0), 1.0F, num::test::float_tolerance);
+    EXPECT_NEAR(inverse(1, 1), -2.0F / 3.0F, num::test::float_tolerance);
 }
