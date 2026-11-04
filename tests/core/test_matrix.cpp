@@ -19,7 +19,7 @@ static_assert(MatrixElement<long double>);
 static_assert(!MatrixElement<int>);
 static_assert(!MatrixElement<bool>);
 
-TEST(MatrixConstruction, Constructs) {
+TEST(MatrixConstruction, ConstructsWithSize) {
     const num::Matrix<double> matrix(2, 3);
 
     EXPECT_EQ(matrix.rows(), 2);
@@ -28,14 +28,16 @@ TEST(MatrixConstruction, Constructs) {
     for (const auto value : matrix) {
         EXPECT_DOUBLE_EQ(value, 0.0);
     }
+}
 
-    const num::Matrix<double> from_elements{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+TEST(MatrixConstruction, ConstructsFromInitializerList) {
+    const num::Matrix<double> matrix{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
 
-    EXPECT_EQ(from_elements.rows(), 2);
-    EXPECT_EQ(from_elements.cols(), 3);
-    EXPECT_EQ(from_elements.size(), 6);
-    EXPECT_DOUBLE_EQ(from_elements(0, 0), 1.0);
-    EXPECT_DOUBLE_EQ(from_elements(1, 2), 6.0);
+    EXPECT_EQ(matrix.rows(), 2);
+    EXPECT_EQ(matrix.cols(), 3);
+    EXPECT_EQ(matrix.size(), 6);
+    EXPECT_DOUBLE_EQ(matrix(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(matrix(1, 2), 6.0);
 }
 
 TEST(MatrixConstruction, CreatesZero) {
@@ -101,13 +103,10 @@ TEST(MatrixAccess, AccessesElements) {
     EXPECT_DOUBLE_EQ(matrix.at(1, 0), 3.0);
     matrix.at(1, 1) = 9.0;
     EXPECT_DOUBLE_EQ(matrix.at(1, 1), 9.0);
-    EXPECT_THROW(static_cast<void>(matrix.at(2, 0)), std::out_of_range);
-    EXPECT_THROW(static_cast<void>(matrix.at(0, 2)), std::out_of_range);
 
     const num::Matrix<double> const_matrix{{1.0, 2.0}, {3.0, 4.0}};
 
     EXPECT_DOUBLE_EQ(const_matrix.at(0, 1), 2.0);
-    EXPECT_THROW(static_cast<void>(const_matrix.at(2, 2)), std::out_of_range);
 }
 
 TEST(MatrixAccess, ExtractsRowsAndColumns) {
@@ -135,6 +134,15 @@ TEST(MatrixAccess, ExtractsEmptyRowsAndColumns) {
 
     const num::Matrix<double> no_columns(3, 0);
     EXPECT_TRUE(no_columns.row(2).empty());
+}
+
+TEST(MatrixAccess, ThrowsOnOutOfRangeIndex) {
+    num::Matrix<double> matrix{{1.0, 2.0}, {3.0, 4.0}};
+    const num::Matrix<double> const_matrix{{1.0, 2.0}, {3.0, 4.0}};
+
+    EXPECT_THROW(static_cast<void>(matrix.at(2, 0)), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(matrix.at(0, 2)), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(const_matrix.at(2, 2)), std::out_of_range);
 }
 
 TEST(MatrixAccess, ThrowsOnOutOfRangeRowOrColumn) {
