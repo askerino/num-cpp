@@ -11,6 +11,7 @@
 #include <concepts>
 #include <cstddef>
 #include <expected>
+#include <functional>
 #include <limits>
 #include <numeric>
 #include <utility>
@@ -92,22 +93,13 @@ template <std::floating_point T>
 }
 
 template <std::floating_point T>
-[[nodiscard]] T column_norm(const Matrix<T>& matrix, std::size_t column) {
-    T norm{};
-    for (std::size_t i = 0; i < matrix.rows(); ++i) {
-        norm = std::hypot(norm, matrix(i, column));
-    }
-    return norm;
-}
-
-template <std::floating_point T>
 void fill_orthonormal_columns(Matrix<T>& u) {
     const std::size_t m = u.rows();
     const std::size_t n = u.cols();
 
     std::vector<bool> has_direction(n, false);
     for (std::size_t j = 0; j < n; ++j) {
-        has_direction[j] = column_norm(u, j) > T{};
+        has_direction[j] = u.column(j).norm_l2() > T{};
     }
 
     for (std::size_t j = 0; j < n; ++j) {
@@ -148,8 +140,7 @@ void sort_singular_triplets(Matrix<T>& u, Vector<T>& s, Matrix<T>& v) {
 
     std::vector<std::size_t> order(n);
     std::ranges::iota(order, std::size_t{0});
-    std::stable_sort(order.begin(), order.end(),
-                     [&s](std::size_t lhs, std::size_t rhs) { return s[lhs] > s[rhs]; });
+    std::ranges::stable_sort(order, std::ranges::greater{}, [&s](std::size_t k) { return s[k]; });
 
     Matrix<T> sorted_u(u.rows(), n);
     Vector<T> sorted_s(n);
@@ -246,7 +237,7 @@ svd_decompose(const Matrix<T>& matrix,
     Vector<T> s(n);
     Matrix<T> u(m, n);
     for (std::size_t j = 0; j < n; ++j) {
-        const T norm = detail::svd::column_norm(a, j);
+        const T norm = a.column(j).norm_l2();
         s[j] = scale * norm;
         if (norm > T{}) {
             for (std::size_t i = 0; i < m; ++i) {

@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <expected>
 #include <limits>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -79,27 +80,25 @@ void rotate(Matrix<T>& a, Matrix<T>& eigenvectors, std::size_t p, std::size_t q)
 }
 
 template <std::floating_point T>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-[[nodiscard]] std::pair<Vector<T>, Matrix<T>> sort_eigenpairs(const Matrix<T>& diagonal,
-                                                              const Matrix<T>& eigenvectors) {
-    const std::size_t n = diagonal.rows();
-    std::vector<std::size_t> order(n);
-    for (std::size_t i = 0; i < n; ++i) {
-        order[i] = i;
-    }
-    std::ranges::sort(order, {}, [&diagonal](std::size_t index) { return diagonal(index, index); });
+void sort_eigenpairs(Vector<T>& values, Matrix<T>& vectors) {
+    const std::size_t n = values.size();
 
-    Vector<T> values(n);
-    Matrix<T> vectors(n, n);
+    std::vector<std::size_t> order(n);
+    std::ranges::iota(order, std::size_t{0});
+    std::ranges::stable_sort(order, {}, [&values](std::size_t k) { return values[k]; });
+
+    Vector<T> sorted_values(n);
+    Matrix<T> sorted_vectors(n, n);
     for (std::size_t k = 0; k < n; ++k) {
         const std::size_t source = order[k];
-        values[k] = diagonal(source, source);
+        sorted_values[k] = values[source];
         for (std::size_t i = 0; i < n; ++i) {
-            vectors(i, k) = eigenvectors(i, source);
+            sorted_vectors(i, k) = vectors(i, source);
         }
     }
 
-    return {std::move(values), std::move(vectors)};
+    values = std::move(sorted_values);
+    vectors = std::move(sorted_vectors);
 }
 
 template <std::floating_point T>
@@ -160,9 +159,13 @@ eigen_decompose(const Matrix<T>& matrix,
         ++sweeps;
     }
 
-    auto [eigenvalues, sorted_eigenvectors] = detail::eigen::sort_eigenpairs(a, eigenvectors);
-    detail::eigen::orient_eigenvectors(sorted_eigenvectors);
-    return EigenDecomposition<T>{std::move(eigenvalues), std::move(sorted_eigenvectors)};
+    Vector<T> eigenvalues(n);
+    for (std::size_t k = 0; k < n; ++k) {
+        eigenvalues[k] = a(k, k);
+    }
+    detail::eigen::sort_eigenpairs(eigenvalues, eigenvectors);
+    detail::eigen::orient_eigenvectors(eigenvectors);
+    return EigenDecomposition<T>{std::move(eigenvalues), std::move(eigenvectors)};
 }
 
 /// @}
