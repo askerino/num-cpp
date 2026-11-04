@@ -81,31 +81,6 @@ TEST(VectorAccess, ThrowsOnOutOfRangeIndex) {
     EXPECT_THROW(static_cast<void>(const_vector.at(3)), std::out_of_range);
 }
 
-TEST(VectorNorms, ComputesNorms) {
-    const num::Vector<double> vector{-3.0, 4.0};
-
-    EXPECT_DOUBLE_EQ(vector.norm_l1(), 7.0);
-    EXPECT_DOUBLE_EQ(vector.norm_l2(), 5.0);
-    EXPECT_DOUBLE_EQ(vector.norm_infinity(), 4.0);
-}
-
-TEST(VectorNorms, ComputesEmptyNorms) {
-    const num::Vector<double> empty;
-
-    EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
-    EXPECT_DOUBLE_EQ(empty.norm_l2(), 0.0);
-    EXPECT_DOUBLE_EQ(empty.norm_infinity(), 0.0);
-}
-
-TEST(VectorNorms, AvoidsOverflowAndUnderflow) {
-    const num::Vector<double> huge_vector{1e200, 1e200};
-    const num::Vector<double> tiny_vector{1e-200, 1e-200};
-
-    EXPECT_NEAR(huge_vector.norm_l2(), 1e200 * std::numbers::sqrt2, 1e190);
-    EXPECT_NEAR(tiny_vector.norm_l2(), 1e-200 * std::numbers::sqrt2, 1e-210);
-    EXPECT_DOUBLE_EQ(num::Vector<double>{1e308}.norm_l2(), 1e308);
-}
-
 TEST(VectorArithmetic, Adds) {
     const num::Vector<double> lhs{1.0, 2.0, 3.0};
     const num::Vector<double> rhs{4.0, 5.0, 6.0};
@@ -171,4 +146,29 @@ TEST(VectorArithmetic, ThrowsOnSizeMismatch) {
     EXPECT_THROW(static_cast<void>(short_vector + long_vector), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(short_vector - long_vector), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(short_vector.dot(long_vector)), std::invalid_argument);
+}
+
+TEST(VectorNorms, ComputesNorms) {
+    const num::Vector<double> vector{-3.0, 4.0};
+
+    EXPECT_DOUBLE_EQ(vector.norm_l1(), 7.0);
+    EXPECT_DOUBLE_EQ(vector.norm_l2(), 5.0);
+    EXPECT_DOUBLE_EQ(vector.norm_infinity(), 4.0);
+}
+
+TEST(VectorNorms, ComputesEmptyNorms) {
+    const num::Vector<double> empty;
+
+    EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
+    EXPECT_DOUBLE_EQ(empty.norm_l2(), 0.0);
+    EXPECT_DOUBLE_EQ(empty.norm_infinity(), 0.0);
+}
+
+TEST(VectorNorms, AvoidsOverflowAndUnderflow) {
+    const num::Vector<double> huge_vector{1e200, 1e200};
+    const num::Vector<double> tiny_vector{1e-200, 1e-200};
+
+    EXPECT_NEAR(huge_vector.norm_l2(), 1e200 * std::numbers::sqrt2, 1e190);
+    EXPECT_NEAR(tiny_vector.norm_l2(), 1e-200 * std::numbers::sqrt2, 1e-210);
+    EXPECT_DOUBLE_EQ(num::Vector<double>{1e308}.norm_l2(), 1e308);
 }

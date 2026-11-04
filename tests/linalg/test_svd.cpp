@@ -48,6 +48,33 @@ TEST(SvdDecompose, ReturnsSingularValuesInDescendingOrder) {
     EXPECT_GE(decomposition.s[0], decomposition.s[1]);
 }
 
+TEST(SvdDecompose, OrientsLeftSingularVectors) {
+    const auto tall_decomposition = num::linalg::svd_decompose(tall_matrix()).value();
+    const auto wide_decomposition = num::linalg::svd_decompose(wide_matrix()).value();
+
+    num::test::expect_oriented_columns(tall_decomposition.u);
+    num::test::expect_oriented_columns(wide_decomposition.u);
+}
+
+TEST(SvdDecompose, PairsRightSingularVectorSignWithLeft) {
+    const num::Matrix<double> matrix{{3.0, 0.0}, {0.0, -2.0}};
+    const auto decomposition = num::linalg::svd_decompose(matrix).value();
+
+    num::test::expect_matrix_near(decomposition.u, num::Matrix<double>::identity(2));
+    num::test::expect_matrix_near(decomposition.v, num::Matrix<double>{{1.0, 0.0}, {0.0, -1.0}});
+    expect_reconstruction(matrix, decomposition);
+}
+
+TEST(SvdDecompose, PairsRightSingularVectorSignWithLeftForWideMatrix) {
+    const num::Matrix<double> matrix{{3.0, 0.0, 0.0}, {0.0, -2.0, 0.0}};
+    const auto decomposition = num::linalg::svd_decompose(matrix).value();
+
+    num::test::expect_matrix_near(decomposition.u, num::Matrix<double>::identity(2));
+    num::test::expect_matrix_near(decomposition.v,
+                                  num::Matrix<double>{{1.0, 0.0}, {0.0, -1.0}, {0.0, 0.0}});
+    expect_reconstruction(matrix, decomposition);
+}
+
 TEST(SvdDecompose, SupportsTallMatrices) {
     const auto matrix = tall_matrix();
     const auto decomposition = num::linalg::svd_decompose(matrix).value();
@@ -76,33 +103,6 @@ TEST(SvdDecompose, SupportsWideMatrices) {
     expect_reconstruction(matrix, decomposition);
     num::test::expect_orthonormal_columns(decomposition.u);
     num::test::expect_orthonormal_columns(decomposition.v);
-}
-
-TEST(SvdDecompose, OrientsLeftSingularVectors) {
-    const auto tall_decomposition = num::linalg::svd_decompose(tall_matrix()).value();
-    const auto wide_decomposition = num::linalg::svd_decompose(wide_matrix()).value();
-
-    num::test::expect_oriented_columns(tall_decomposition.u);
-    num::test::expect_oriented_columns(wide_decomposition.u);
-}
-
-TEST(SvdDecompose, PairsRightSingularVectorSignWithLeft) {
-    const num::Matrix<double> matrix{{3.0, 0.0}, {0.0, -2.0}};
-    const auto decomposition = num::linalg::svd_decompose(matrix).value();
-
-    num::test::expect_matrix_near(decomposition.u, num::Matrix<double>::identity(2));
-    num::test::expect_matrix_near(decomposition.v, num::Matrix<double>{{1.0, 0.0}, {0.0, -1.0}});
-    expect_reconstruction(matrix, decomposition);
-}
-
-TEST(SvdDecompose, PairsRightSingularVectorSignWithLeftForWideMatrix) {
-    const num::Matrix<double> matrix{{3.0, 0.0, 0.0}, {0.0, -2.0, 0.0}};
-    const auto decomposition = num::linalg::svd_decompose(matrix).value();
-
-    num::test::expect_matrix_near(decomposition.u, num::Matrix<double>::identity(2));
-    num::test::expect_matrix_near(decomposition.v,
-                                  num::Matrix<double>{{1.0, 0.0}, {0.0, -1.0}, {0.0, 0.0}});
-    expect_reconstruction(matrix, decomposition);
 }
 
 TEST(SvdDecompose, HandlesSingleElementMatrix) {
@@ -153,6 +153,13 @@ TEST(SvdDecompose, HandlesZeroMatrix) {
     num::test::expect_orthonormal_columns(decomposition.v);
 }
 
+TEST(SvdDecompose, HandlesAlreadyConvergedMatrix) {
+    const num::Matrix<double> matrix{{1.0, 1.0}, {1.0, -1.0}};
+    const auto decomposition = num::linalg::svd_decompose(matrix, 0.0, 0);
+
+    EXPECT_TRUE(decomposition.has_value());
+}
+
 TEST(SvdDecompose, HandlesExtremeScales) {
     const num::Matrix<double> tiny{{1e-200, 0.0}, {0.0, 3e-200}};
     const auto tiny_decomposition = num::linalg::svd_decompose(tiny).value();
@@ -161,13 +168,6 @@ TEST(SvdDecompose, HandlesExtremeScales) {
     const num::Matrix<double> huge{{1e300, 0.0}, {0.0, 3e300}};
     const auto huge_decomposition = num::linalg::svd_decompose(huge).value();
     num::test::expect_vector_near(huge_decomposition.s / 1e300, num::Vector<double>{3.0, 1.0});
-}
-
-TEST(SvdDecompose, HandlesAlreadyConvergedMatrix) {
-    const num::Matrix<double> matrix{{1.0, 1.0}, {1.0, -1.0}};
-    const auto decomposition = num::linalg::svd_decompose(matrix, 0.0, 0);
-
-    EXPECT_TRUE(decomposition.has_value());
 }
 
 TEST(SvdDecompose, ReportsNonFiniteInput) {
@@ -257,18 +257,6 @@ TEST(SvdLeastSquares, SolvesOverdeterminedSystem) {
     num::test::expect_vector_near(solution, num::Vector<double>{5.0 / 6.0, 1.5});
 }
 
-TEST(SvdLeastSquares, MatchesQrLeastSquares) {
-    const auto matrix = tall_matrix();
-    const num::Vector<double> rhs{1.0, -2.0, 3.0};
-
-    const auto qr_solution =
-        num::linalg::qr_least_squares(num::linalg::qr_decompose(matrix).value(), rhs).value();
-    const auto svd_solution =
-        num::linalg::svd_least_squares(num::linalg::svd_decompose(matrix).value(), rhs).value();
-
-    num::test::expect_vector_near(svd_solution, qr_solution);
-}
-
 TEST(SvdLeastSquares, SolvesUnderdeterminedSystem) {
     const num::Matrix<double> matrix{{1.0, 1.0}};
     const num::Vector<double> rhs{2.0};
@@ -294,6 +282,18 @@ TEST(SvdLeastSquares, SolvesInconsistentRankDeficientSystem) {
 
     const auto solution = num::linalg::svd_least_squares(decomposition, rhs).value();
     num::test::expect_vector_near(solution, num::Vector<double>{1.0, 0.0});
+}
+
+TEST(SvdLeastSquares, MatchesQrLeastSquares) {
+    const auto matrix = tall_matrix();
+    const num::Vector<double> rhs{1.0, -2.0, 3.0};
+
+    const auto qr_solution =
+        num::linalg::qr_least_squares(num::linalg::qr_decompose(matrix).value(), rhs).value();
+    const auto svd_solution =
+        num::linalg::svd_least_squares(num::linalg::svd_decompose(matrix).value(), rhs).value();
+
+    num::test::expect_vector_near(svd_solution, qr_solution);
 }
 
 TEST(SvdLeastSquares, ReportsNonFiniteInput) {

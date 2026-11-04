@@ -68,6 +68,22 @@ TEST(EigenDecompose, HandlesSingleElementMatrix) {
     num::test::expect_matrix_near(decomposition.vectors, num::Matrix<double>{{1.0}});
 }
 
+TEST(EigenDecompose, HandlesDiagonalMatrix) {
+    const num::Matrix<double> matrix{{1.0, 0.0, 0.0}, {0.0, 2.0, 0.0}, {0.0, 0.0, 3.0}};
+    const auto decomposition = num::linalg::eigen_decompose(matrix).value();
+
+    num::test::expect_vector_near(decomposition.values, num::Vector<double>{1.0, 2.0, 3.0});
+    num::test::expect_matrix_near(decomposition.vectors, num::Matrix<double>::identity(3));
+}
+
+TEST(EigenDecompose, HandlesRepeatedEigenvalues) {
+    const num::Matrix<double> matrix{{2.0, 0.0}, {0.0, 2.0}};
+    const auto decomposition = num::linalg::eigen_decompose(matrix).value();
+
+    num::test::expect_vector_near(decomposition.values, num::Vector<double>{2.0, 2.0});
+    expect_reconstruction(matrix, decomposition);
+}
+
 TEST(EigenDecompose, HandlesTinyScales) {
     const num::Matrix<double> matrix{{1e-200, 1e-200}, {1e-200, 3e-200}};
     const auto decomposition = num::linalg::eigen_decompose(matrix).value();
@@ -86,22 +102,6 @@ TEST(EigenDecompose, HandlesExtremeScaleDifferences) {
     EXPECT_TRUE(std::isfinite(decomposition.values[1]));
     EXPECT_DOUBLE_EQ(decomposition.values[0], -1e300);
     EXPECT_DOUBLE_EQ(decomposition.values[1], 1e300);
-}
-
-TEST(EigenDecompose, HandlesDiagonalMatrix) {
-    const num::Matrix<double> matrix{{1.0, 0.0, 0.0}, {0.0, 2.0, 0.0}, {0.0, 0.0, 3.0}};
-    const auto decomposition = num::linalg::eigen_decompose(matrix).value();
-
-    num::test::expect_vector_near(decomposition.values, num::Vector<double>{1.0, 2.0, 3.0});
-    num::test::expect_matrix_near(decomposition.vectors, num::Matrix<double>::identity(3));
-}
-
-TEST(EigenDecompose, HandlesRepeatedEigenvalues) {
-    const num::Matrix<double> matrix{{2.0, 0.0}, {0.0, 2.0}};
-    const auto decomposition = num::linalg::eigen_decompose(matrix).value();
-
-    num::test::expect_vector_near(decomposition.values, num::Vector<double>{2.0, 2.0});
-    expect_reconstruction(matrix, decomposition);
 }
 
 TEST(EigenDecompose, ReportsNonFiniteInput) {
@@ -129,6 +129,13 @@ TEST(EigenDecompose, ReportsNoConvergence) {
     EXPECT_EQ(decomposition.error(), num::Error::no_convergence);
 }
 
+TEST(EigenDecompose, ThrowsOnNegativeTolerance) {
+    const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
+
+    EXPECT_THROW(static_cast<void>(num::linalg::eigen_decompose(matrix, -1.0)),
+                 std::invalid_argument);
+}
+
 TEST(EigenDecompose, ThrowsOnNonFiniteTolerance) {
     const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
 
@@ -137,13 +144,6 @@ TEST(EigenDecompose, ThrowsOnNonFiniteTolerance) {
                  std::invalid_argument);
     EXPECT_THROW(static_cast<void>(
                      num::linalg::eigen_decompose(matrix, std::numeric_limits<double>::infinity())),
-                 std::invalid_argument);
-}
-
-TEST(EigenDecompose, ThrowsOnNegativeTolerance) {
-    const num::Matrix<double> matrix{{2.0, 1.0}, {1.0, 2.0}};
-
-    EXPECT_THROW(static_cast<void>(num::linalg::eigen_decompose(matrix, -1.0)),
                  std::invalid_argument);
 }
 

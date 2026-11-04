@@ -125,6 +125,15 @@ TEST(QrLeastSquares, SolvesSquareSystem) {
     num::test::expect_vector_near(solution, num::Vector<double>{2.6, 1.8, -1.0});
 }
 
+TEST(QrLeastSquares, SolvesOverdeterminedSystem) {
+    const auto matrix = tall_matrix();
+    const num::Vector<double> rhs{1.0, 2.0, 2.0};
+    const auto decomposition = num::linalg::qr_decompose(matrix).value();
+    const auto solution = num::linalg::qr_least_squares(decomposition, rhs).value();
+
+    num::test::expect_vector_near(solution, num::Vector<double>{7.0 / 6.0, 0.5});
+}
+
 TEST(QrLeastSquares, MatchesLuSolve) {
     const auto matrix = square_matrix();
     const num::Vector<double> rhs{8.0, 6.0, 5.0};
@@ -134,15 +143,6 @@ TEST(QrLeastSquares, MatchesLuSolve) {
     const auto lu_solution = num::linalg::lu_solve(lu_decomposition, rhs).value();
 
     num::test::expect_vector_near(qr_solution, lu_solution);
-}
-
-TEST(QrLeastSquares, SolvesOverdeterminedSystem) {
-    const auto matrix = tall_matrix();
-    const num::Vector<double> rhs{1.0, 2.0, 2.0};
-    const auto decomposition = num::linalg::qr_decompose(matrix).value();
-    const auto solution = num::linalg::qr_least_squares(decomposition, rhs).value();
-
-    num::test::expect_vector_near(solution, num::Vector<double>{7.0 / 6.0, 0.5});
 }
 
 TEST(QrLeastSquares, SatisfiesNormalEquations) {
