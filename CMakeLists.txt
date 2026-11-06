@@ -14,10 +14,16 @@ option(NUM_ENABLE_SANITIZERS "Enable ASan + UBSan (Clang only)" OFF)
 option(NUM_ENABLE_COVERAGE "Enable code coverage (Clang only)" OFF)
 option(NUM_BUILD_DOCS "Build API documentation with Doxygen" OFF)
 
-add_library(num INTERFACE)
-add_library(num::num ALIAS num)
-target_include_directories(num INTERFACE "include")
-target_compile_features(num INTERFACE cxx_std_23)
+function(num_add_library library)
+    set(include_dir "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    add_library(num_${library} INTERFACE)
+    add_library(num::${library} ALIAS num_${library})
+    target_include_directories(num_${library} INTERFACE "${include_dir}")
+    set_property(GLOBAL APPEND PROPERTY NUM_INCLUDE_DIRS "${include_dir}")
+endfunction()
+
+add_subdirectory(libs/core)
+add_subdirectory(libs/linalg)
 
 add_library(num_project_options INTERFACE)
 target_compile_options(num_project_options INTERFACE
@@ -83,17 +89,23 @@ if (NUM_ENABLE_COVERAGE)
             REQUIRED
     )
 
+    get_property(NUM_TEST_TARGETS GLOBAL PROPERTY NUM_TEST_TARGETS)
+    set(NUM_TEST_EXECUTABLES "")
+    foreach (target IN LISTS NUM_TEST_TARGETS)
+        list(APPEND NUM_TEST_EXECUTABLES "$<TARGET_FILE:${target}>")
+    endforeach ()
+
     add_custom_target(coverage
             COMMAND "${CMAKE_COMMAND}"
             "-DNUM_COVERAGE_CTEST_EXECUTABLE=${CMAKE_CTEST_COMMAND}"
-            "-DNUM_COVERAGE_TEST_EXECUTABLE=$<TARGET_FILE:num_tests>"
+            "-DNUM_COVERAGE_TEST_EXECUTABLES=${NUM_TEST_EXECUTABLES}"
             "-DNUM_COVERAGE_LLVM_PROFDATA_EXECUTABLE=${NUM_LLVM_PROFDATA_EXECUTABLE}"
             "-DNUM_COVERAGE_LLVM_COV_EXECUTABLE=${NUM_LLVM_COV_EXECUTABLE}"
             "-DNUM_COVERAGE_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
             "-DNUM_COVERAGE_BINARY_DIR=${PROJECT_BINARY_DIR}"
             "-DNUM_COVERAGE_CONFIG=$<CONFIG>"
             -P "${PROJECT_SOURCE_DIR}/cmake/coverage.cmake"
-            DEPENDS num_tests
+            DEPENDS ${NUM_TEST_TARGETS}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             USES_TERMINAL
             VERBATIM
@@ -117,9 +129,11 @@ if (NUM_BUILD_DOCS)
     FetchContent_MakeAvailable(doxygen-awesome-css)
     FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR NUM_DOXYGEN_AWESOME_CSS_DIR)
 
+    get_property(NUM_INCLUDE_DIRS GLOBAL PROPERTY NUM_INCLUDE_DIRS)
+
     set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/docs")
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/docs/mainpage.md")
-    set(DOXYGEN_STRIP_FROM_INC_PATH "${PROJECT_SOURCE_DIR}/include")
+    set(DOXYGEN_STRIP_FROM_INC_PATH ${NUM_INCLUDE_DIRS})
     set(DOXYGEN_EXTRACT_ALL YES)
     set(DOXYGEN_EXCLUDE_SYMBOLS "*::detail")
     set(DOXYGEN_BRIEF_MEMBER_DESC NO)
@@ -141,7 +155,7 @@ if (NUM_BUILD_DOCS)
     set(DOXYGEN_HTML_COLORSTYLE LIGHT)
 
     doxygen_add_docs(docs
-            include "${PROJECT_SOURCE_DIR}/docs/mainpage.md"
+            ${NUM_INCLUDE_DIRS} "${PROJECT_SOURCE_DIR}/docs/mainpage.md"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             COMMENT "Generating API documentation"
     )

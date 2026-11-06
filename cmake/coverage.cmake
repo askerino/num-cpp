@@ -1,6 +1,6 @@
 set(required_variables
         NUM_COVERAGE_CTEST_EXECUTABLE
-        NUM_COVERAGE_TEST_EXECUTABLE
+        NUM_COVERAGE_TEST_EXECUTABLES
         NUM_COVERAGE_LLVM_PROFDATA_EXECUTABLE
         NUM_COVERAGE_LLVM_COV_EXECUTABLE
         NUM_COVERAGE_SOURCE_DIR
@@ -14,8 +14,8 @@ foreach (variable IN LISTS required_variables)
 endforeach ()
 
 set(profile_directory "${NUM_COVERAGE_BINARY_DIR}/coverage-data")
-set(raw_profile_pattern "${profile_directory}/num_tests-%p.profraw")
-set(indexed_profile "${profile_directory}/num_tests.profdata")
+set(raw_profile_pattern "${profile_directory}/num-%p.profraw")
+set(indexed_profile "${profile_directory}/num.profdata")
 
 file(REMOVE_RECURSE "${profile_directory}")
 file(MAKE_DIRECTORY "${profile_directory}")
@@ -24,6 +24,7 @@ set(ctest_command
         "${NUM_COVERAGE_CTEST_EXECUTABLE}"
         --test-dir "${NUM_COVERAGE_BINARY_DIR}"
         --output-on-failure
+        --exclude-regex "^example\\." # Coverage is measured by the unit tests.
 )
 if (DEFINED NUM_COVERAGE_CONFIG AND NOT NUM_COVERAGE_CONFIG STREQUAL "")
     list(APPEND ctest_command --build-config "${NUM_COVERAGE_CONFIG}")
@@ -58,16 +59,21 @@ endif ()
 
 file(GLOB_RECURSE coverage_sources
         LIST_DIRECTORIES false
-        "${NUM_COVERAGE_SOURCE_DIR}/include/num/*.hpp"
+        "${NUM_COVERAGE_SOURCE_DIR}/libs/*/include/num/*.hpp"
 )
 if (NOT coverage_sources)
     message(FATAL_ERROR "No library headers were found for coverage reporting")
 endif ()
 
+set(object_args "")
+foreach (test_executable IN LISTS NUM_COVERAGE_TEST_EXECUTABLES)
+    list(APPEND object_args "-object=${test_executable}")
+endforeach ()
+
 execute_process(
         COMMAND "${NUM_COVERAGE_LLVM_COV_EXECUTABLE}"
         report
-        "${NUM_COVERAGE_TEST_EXECUTABLE}"
+        ${object_args}
         "-instr-profile=${indexed_profile}"
         --sources
         ${coverage_sources}

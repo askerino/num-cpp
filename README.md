@@ -104,7 +104,14 @@ C++と数値計算の基礎を学ぶために作っています。実際の開�
 
 ## 使い方
 
-`num::num` ターゲットをリンクして使用します。
+必要なモジュールを `target_link_libraries` でリンクします。
+
+| ターゲット    | 機能                                                   | 依存        |
+| :------------ | :----------------------------------------------------- | :---------- |
+| `num::core`   | ベクトル、行列、エラー処理                             | なし        |
+| `num::linalg` | LU分解、コレスキー分解、QR分解、固有値分解、特異値分解 | `num::core` |
+
+以下はLU分解による連立一次方程式の求解例です。
 
 ```cmake
 include(FetchContent)
@@ -115,10 +122,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(num-cpp)
 
-target_link_libraries(app PRIVATE num::num)
+target_link_libraries(app PRIVATE num::linalg)
 ```
-
-LU分解による連立一次方程式の求解例です。
 
 ```cpp
 #include "num/linalg/lu.hpp"
@@ -182,14 +187,18 @@ x = [ 2.600 1.800 -1.000 ]
 .
 ├── .github/workflows/
 ├── cmake/
+├── docs/
 ├── examples/
 │   ├── CMakeLists.txt
 │   ├── least_squares.cpp
 │   └── solve_linear_system.cpp
-├── include/
-│   └── num/
-│       ├── core/
-│       └── linalg/
+├── libs/
+│   ├── core/
+│   │   ├── include/num/core/
+│   │   └── CMakeLists.txt
+│   └── linalg/
+│       ├── include/num/linalg/
+│       └── CMakeLists.txt
 ├── tests/
 │   ├── core/
 │   ├── linalg/
