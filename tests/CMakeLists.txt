@@ -14,25 +14,31 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-add_executable(num_tests
+include(GoogleTest)
+
+function(num_add_test target library)
+    add_executable(${target} ${ARGN})
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(${target} PRIVATE
+            num::${library}
+            num_project_options
+            GTest::gtest
+            GTest::gtest_main
+    )
+    gtest_discover_tests(${target} TEST_PREFIX "${library}." PROPERTIES LABELS ${library})
+    set_property(GLOBAL APPEND PROPERTY NUM_TEST_TARGETS ${target})
+endfunction()
+
+num_add_test(num_core_tests core
         core/test_error.cpp
         core/test_matrix.cpp
         core/test_vector.cpp
+)
+
+num_add_test(num_linalg_tests linalg
         linalg/test_lu.cpp
         linalg/test_cholesky.cpp
         linalg/test_qr.cpp
         linalg/test_eigen.cpp
         linalg/test_svd.cpp
 )
-
-target_include_directories(num_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(num_tests PRIVATE
-        num
-        num_project_options
-        GTest::gtest
-        GTest::gtest_main
-)
-
-include(GoogleTest)
-gtest_discover_tests(num_tests)
