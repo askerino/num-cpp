@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <expected>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 namespace num::linalg {
@@ -98,7 +99,8 @@ template <std::floating_point T>
         }
     }
 
-    return LuDecomposition<T>{lower, upper, permutation, row_swaps};
+    return LuDecomposition<T>{std::move(lower), std::move(upper), std::move(permutation),
+                              row_swaps};
 }
 
 /// @note The product of the diagonal entries may overflow or underflow for large matrices; on

@@ -10,6 +10,7 @@
 #include <concepts>
 #include <cstddef>
 #include <expected>
+#include <utility>
 
 namespace num::linalg {
 
@@ -66,7 +67,7 @@ cholesky_decompose(const Matrix<T>& matrix) {
         }
     }
 
-    return CholeskyDecomposition<T>{lower};
+    return CholeskyDecomposition<T>{std::move(lower)};
 }
 
 /// @note The product of the squared diagonal entries may overflow or underflow for large matrices;
