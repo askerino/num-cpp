@@ -9,6 +9,7 @@
 #include <concepts>
 #include <cstddef>
 #include <expected>
+#include <utility>
 
 namespace num::linalg {
 
@@ -58,7 +59,7 @@ template <std::floating_point T>
         }
     }
 
-    return QrDecomposition<T>{q, r};
+    return QrDecomposition<T>{std::move(q), std::move(r)};
 }
 
 /// @return The least-squares solution, or an error if @p rhs contains a non-finite value.
