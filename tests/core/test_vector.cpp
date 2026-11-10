@@ -1,7 +1,9 @@
 #include "num/core/vector.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <numbers>
 #include <stdexcept>
 
@@ -162,6 +164,13 @@ TEST(VectorNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(empty.norm_l1(), 0.0);
     EXPECT_DOUBLE_EQ(empty.norm_l2(), 0.0);
     EXPECT_DOUBLE_EQ(empty.norm_infinity(), 0.0);
+}
+
+TEST(VectorNorms, PropagatesNaN) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+
+    EXPECT_TRUE(std::isnan(num::Vector<double>{nan, 1.0}.norm_infinity()));
+    EXPECT_TRUE(std::isnan(num::Vector<double>{1.0, nan}.norm_infinity()));
 }
 
 TEST(VectorNorms, HandlesExtremeScales) {

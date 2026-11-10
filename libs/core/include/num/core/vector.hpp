@@ -143,10 +143,14 @@ class Vector {
         return result;
     }
 
+    /// @note Returns NaN if any element is NaN.
     [[nodiscard]] T norm_infinity() const {
         T result{};
         for (const auto element : data_) {
             const T magnitude = std::abs(element);
+            if (std::isnan(magnitude)) {
+                return magnitude;
+            }
             if (magnitude > result) {
                 result = magnitude;
             }

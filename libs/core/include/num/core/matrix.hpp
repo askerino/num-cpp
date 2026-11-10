@@ -238,12 +238,16 @@ class Matrix {
         return result;
     }
 
+    /// @note Returns NaN if any element is NaN.
     [[nodiscard]] T norm_l1() const {
         T result{};
         for (std::size_t j = 0; j < cols_; ++j) {
             T column_sum{};
             for (std::size_t i = 0; i < rows_; ++i) {
                 column_sum += std::abs((*this)(i, j));
+            }
+            if (std::isnan(column_sum)) {
+                return column_sum;
             }
             if (column_sum > result) {
                 result = column_sum;
@@ -252,12 +256,16 @@ class Matrix {
         return result;
     }
 
+    /// @note Returns NaN if any element is NaN.
     [[nodiscard]] T norm_infinity() const {
         T result{};
         for (std::size_t i = 0; i < rows_; ++i) {
             T row_sum{};
             for (std::size_t j = 0; j < cols_; ++j) {
                 row_sum += std::abs((*this)(i, j));
+            }
+            if (std::isnan(row_sum)) {
+                return row_sum;
             }
             if (row_sum > result) {
                 result = row_sum;

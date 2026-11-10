@@ -294,6 +294,17 @@ TEST(MatrixNorms, ComputesEmptyNorms) {
     EXPECT_DOUBLE_EQ(no_columns.norm_frobenius(), 0.0);
 }
 
+TEST(MatrixNorms, PropagatesNaN) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const num::Matrix<double> nan_first{{nan, 1.0}, {1.0, 1.0}};
+    const num::Matrix<double> nan_last{{1.0, 1.0}, {1.0, nan}};
+
+    EXPECT_TRUE(std::isnan(nan_first.norm_l1()));
+    EXPECT_TRUE(std::isnan(nan_last.norm_l1()));
+    EXPECT_TRUE(std::isnan(nan_first.norm_infinity()));
+    EXPECT_TRUE(std::isnan(nan_last.norm_infinity()));
+}
+
 TEST(MatrixNorms, HandlesExtremeScales) {
     const num::Matrix<double> huge_matrix{{1e200, 1e200}};
     const num::Matrix<double> tiny_matrix{{1e-200, 1e-200}};
