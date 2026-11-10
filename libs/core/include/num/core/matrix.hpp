@@ -32,19 +32,19 @@ class Matrix {
     Matrix(std::initializer_list<std::initializer_list<T>> values)
         : rows_(values.size()), cols_(values.size() != 0 ? values.begin()->size() : 0),
           data_(checked_element_count(rows_, cols_), T{}) {
-        std::size_t row = 0;
+        std::size_t i = 0;
         for (const auto& row_values : values) {
             if (row_values.size() != cols_) {
                 throw std::invalid_argument(
-                    std::format("matrix row size mismatch: row {} has {}, expected {}", row,
+                    std::format("matrix row size mismatch: row {} has {}, expected {}", i,
                                 row_values.size(), cols_));
             }
-            std::size_t column = 0;
+            std::size_t j = 0;
             for (const auto value : row_values) {
-                (*this)(row, column) = value;
-                ++column;
+                (*this)(i, j) = value;
+                ++j;
             }
-            ++row;
+            ++i;
         }
     }
 
