@@ -13,6 +13,7 @@
 #include <expected>
 #include <limits>
 #include <numeric>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -105,12 +106,11 @@ template <std::floating_point T>
 void orient_eigenvectors(Matrix<T>& eigenvectors) {
     const std::size_t n = eigenvectors.rows();
     for (std::size_t k = 0; k < n; ++k) {
-        std::size_t largest = 0;
-        for (std::size_t i = 1; i < n; ++i) {
-            if (std::abs(eigenvectors(i, k)) > std::abs(eigenvectors(largest, k))) {
-                largest = i;
-            }
-        }
+        const auto magnitude = [&eigenvectors, k](std::size_t i) {
+            return std::abs(eigenvectors(i, k));
+        };
+        const std::size_t largest =
+            *std::ranges::max_element(std::views::iota(std::size_t{0}, n), {}, magnitude);
         if (eigenvectors(largest, k) < T{}) {
             for (std::size_t i = 0; i < n; ++i) {
                 eigenvectors(i, k) = -eigenvectors(i, k);

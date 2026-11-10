@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <expected>
 #include <numeric>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -65,17 +66,11 @@ template <std::floating_point T>
     std::size_t row_swaps{};
 
     for (std::size_t k = 0; k < n; ++k) {
-        std::size_t pivot_row = k;
-        T pivot_magnitude = std::abs(upper(k, k));
-        for (std::size_t i = k + 1; i < n; ++i) {
-            const T candidate_magnitude = std::abs(upper(i, k));
-            if (candidate_magnitude > pivot_magnitude) {
-                pivot_magnitude = candidate_magnitude;
-                pivot_row = i;
-            }
-        }
+        const auto magnitude = [&upper, k](std::size_t i) { return std::abs(upper(i, k)); };
+        const std::size_t pivot_row =
+            *std::ranges::max_element(std::views::iota(k, n), {}, magnitude);
 
-        if (pivot_magnitude == T{}) {
+        if (upper(pivot_row, k) == T{}) {
             return std::unexpected(Error::singular_matrix);
         }
 

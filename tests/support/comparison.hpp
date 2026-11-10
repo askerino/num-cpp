@@ -3,9 +3,11 @@
 #include "num/core/matrix.hpp"
 #include "num/core/vector.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <ranges>
 
 namespace num::test {
 
@@ -54,12 +56,9 @@ inline void expect_orthonormal_columns(const Matrix<double>& matrix) {
 
 inline void expect_oriented_columns(const Matrix<double>& matrix) {
     for (std::size_t j = 0; j < matrix.cols(); ++j) {
-        std::size_t largest = 0;
-        for (std::size_t i = 1; i < matrix.rows(); ++i) {
-            if (std::abs(matrix(i, j)) > std::abs(matrix(largest, j))) {
-                largest = i;
-            }
-        }
+        const auto magnitude = [&matrix, j](std::size_t i) { return std::abs(matrix(i, j)); };
+        const std::size_t largest = *std::ranges::max_element(
+            std::views::iota(std::size_t{0}, matrix.rows()), {}, magnitude);
         EXPECT_GE(matrix(largest, j), 0.0) << "in column " << j;
     }
 }
