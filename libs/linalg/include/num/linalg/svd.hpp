@@ -14,6 +14,7 @@
 #include <functional>
 #include <limits>
 #include <numeric>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -166,12 +167,9 @@ template <std::floating_point T>
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void orient_columns(Matrix<T>& u, Matrix<T>& v) {
     for (std::size_t k = 0; k < u.cols(); ++k) {
-        std::size_t largest = 0;
-        for (std::size_t i = 1; i < u.rows(); ++i) {
-            if (std::abs(u(i, k)) > std::abs(u(largest, k))) {
-                largest = i;
-            }
-        }
+        const auto magnitude = [&u, k](std::size_t i) { return std::abs(u(i, k)); };
+        const std::size_t largest =
+            *std::ranges::max_element(std::views::iota(std::size_t{0}, u.rows()), {}, magnitude);
 
         if (u(largest, k) < T{}) {
             for (std::size_t i = 0; i < u.rows(); ++i) {
