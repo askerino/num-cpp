@@ -1,3 +1,6 @@
+#include "num/core/error.hpp"
+#include "num/core/matrix.hpp"
+#include "num/core/vector.hpp"
 #include "num/linalg/cholesky.hpp"
 #include "num/linalg/lu.hpp"
 #include "support/comparison.hpp"
