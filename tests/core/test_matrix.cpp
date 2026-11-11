@@ -1,4 +1,5 @@
 #include "num/core/matrix.hpp"
+#include "num/core/vector.hpp"
 #include "support/comparison.hpp"
 
 #include <algorithm>
