@@ -55,7 +55,6 @@ jobs:
           -j "$(nproc)"
           -clang-tidy-binary clang-tidy-21
           -warnings-as-errors='*'
-          -header-filter='libs/.*/include/num/.*\.hpp$'
           '/tests/.*\.cpp$'
           '/examples/.*\.cpp$'
 
