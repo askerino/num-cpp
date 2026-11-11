@@ -152,18 +152,14 @@ int main() {
     }
     const auto& x = *solution;
 
-    std::print("x = [");
-    for (const auto value : x) {
-        std::print(" {:.3f}", value);
-    }
-    std::println(" ]");
+    std::println("x = {::.3f}", x);
 }
 ```
 
 実行すると以下の結果が得られます。
 
 ```text
-x = [ 2.600 1.800 -1.000 ]
+x = [2.600, 1.800, -1.000]
 ```
 
 詳しいサンプルコードは [`examples/solve_linear_system.cpp`][example] を参照してください。

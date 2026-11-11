@@ -29,19 +29,11 @@ int main() {
     const auto residual = (a * coefficients - b).norm_l2();
 
     std::println("A =");
-    for (std::size_t row = 0; row < a.rows(); ++row) {
-        std::print("[");
-        for (std::size_t column = 0; column < a.cols(); ++column) {
-            std::print("{:8.3f}", a(row, column));
-        }
-        std::println(" ]");
+    for (std::size_t i = 0; i < a.rows(); ++i) {
+        std::println("{::8.3f}", a.row(i));
     }
 
-    std::print("b = [");
-    for (const auto value : b) {
-        std::print("{:8.3f}", value);
-    }
-    std::println(" ]");
+    std::println("b = {::8.3f}", b);
 
     std::println("Fit: y = {:.3f}x + {:.3f}", coefficients[1], coefficients[0]);
 
