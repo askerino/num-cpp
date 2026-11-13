@@ -155,7 +155,9 @@ if (NUM_BUILD_DOCS)
     set(DOXYGEN_HTML_COLORSTYLE LIGHT)
 
     doxygen_add_docs(docs
-            ${NUM_INCLUDE_DIRS} "${PROJECT_SOURCE_DIR}/docs/mainpage.md"
+            ${NUM_INCLUDE_DIRS}
+            "${PROJECT_SOURCE_DIR}/docs/groups.dox"
+            "${PROJECT_SOURCE_DIR}/docs/mainpage.md"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             COMMENT "Generating API documentation"
     )
