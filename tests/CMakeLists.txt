@@ -25,6 +25,7 @@ function(num_add_test target library)
             GTest::gtest
             GTest::gtest_main
     )
+    set_target_properties(${target} PROPERTIES COMPILE_WARNING_AS_ERROR ON)
     gtest_discover_tests(${target} TEST_PREFIX "${library}." PROPERTIES LABELS ${library})
     set_property(GLOBAL APPEND PROPERTY NUM_TEST_TARGETS ${target})
 endfunction()
