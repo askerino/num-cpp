@@ -10,7 +10,7 @@
 
 namespace num {
 
-/// @defgroup core Core
+/// @addtogroup core
 /// @{
 
 /// @note `Vector<double>(5)` creates five zero-initialized elements, whereas `Vector<double>{5.0}`

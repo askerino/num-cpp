@@ -18,8 +18,6 @@
 
 namespace num::linalg {
 
-/// @defgroup linalg Linear algebra
-
 /// @defgroup lu LU decomposition
 /// @ingroup linalg
 /// @{
