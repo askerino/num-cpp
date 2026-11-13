@@ -43,3 +43,43 @@ num_add_test(num_linalg_tests linalg
         linalg/test_eigen.cpp
         linalg/test_svd.cpp
 )
+
+if (NUM_ENABLE_COVERAGE)
+    get_property(NUM_TEST_TARGETS GLOBAL PROPERTY NUM_TEST_TARGETS)
+    set(NUM_TEST_EXECUTABLES "")
+    foreach (target IN LISTS NUM_TEST_TARGETS)
+        list(APPEND NUM_TEST_EXECUTABLES "$<TARGET_FILE:${target}>")
+    endforeach ()
+
+    file(REAL_PATH "${CMAKE_CXX_COMPILER}" NUM_CLANG_COMPILER_REAL_PATH)
+    get_filename_component(NUM_CLANG_BIN_DIR "${NUM_CLANG_COMPILER_REAL_PATH}" DIRECTORY)
+    find_program(NUM_LLVM_PROFDATA_EXECUTABLE
+            NAMES llvm-profdata
+            HINTS "${NUM_CLANG_BIN_DIR}"
+            NAMES_PER_DIR
+            REQUIRED
+    )
+    find_program(NUM_LLVM_COV_EXECUTABLE
+            NAMES llvm-cov
+            HINTS "${NUM_CLANG_BIN_DIR}"
+            NAMES_PER_DIR
+            REQUIRED
+    )
+
+    add_custom_target(coverage
+            COMMAND "${CMAKE_COMMAND}"
+            "-DNUM_COVERAGE_CTEST_EXECUTABLE=${CMAKE_CTEST_COMMAND}"
+            "-DNUM_COVERAGE_TEST_EXECUTABLES=${NUM_TEST_EXECUTABLES}"
+            "-DNUM_COVERAGE_LLVM_PROFDATA_EXECUTABLE=${NUM_LLVM_PROFDATA_EXECUTABLE}"
+            "-DNUM_COVERAGE_LLVM_COV_EXECUTABLE=${NUM_LLVM_COV_EXECUTABLE}"
+            "-DNUM_COVERAGE_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
+            "-DNUM_COVERAGE_BINARY_DIR=${PROJECT_BINARY_DIR}"
+            "-DNUM_COVERAGE_CONFIG=$<CONFIG>"
+            -P "${PROJECT_SOURCE_DIR}/cmake/coverage.cmake"
+            DEPENDS ${NUM_TEST_TARGETS}
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            USES_TERMINAL
+            VERBATIM
+            COMMENT "Running tests and generating coverage report"
+    )
+endif ()
