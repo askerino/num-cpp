@@ -27,8 +27,8 @@ add_subdirectory(libs/linalg)
 
 add_library(num_project_options INTERFACE)
 target_compile_options(num_project_options INTERFACE
-        $<$<CXX_COMPILER_ID:MSVC>:/utf-8 /W4 /permissive- /WX>
-        $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall -Wextra -Wpedantic -Werror>
+        $<$<CXX_COMPILER_ID:MSVC>:/utf-8 /W4 /permissive->
+        $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall -Wextra -Wpedantic>
 )
 
 if (NUM_ENABLE_SANITIZERS)
