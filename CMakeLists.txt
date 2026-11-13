@@ -73,92 +73,10 @@ if (NUM_BUILD_TESTS)
     add_subdirectory(tests)
 endif ()
 
-if (NUM_ENABLE_COVERAGE)
-    file(REAL_PATH "${CMAKE_CXX_COMPILER}" NUM_CLANG_COMPILER_REAL_PATH)
-    get_filename_component(NUM_CLANG_BIN_DIR "${NUM_CLANG_COMPILER_REAL_PATH}" DIRECTORY)
-    find_program(NUM_LLVM_PROFDATA_EXECUTABLE
-            NAMES llvm-profdata
-            HINTS "${NUM_CLANG_BIN_DIR}"
-            NAMES_PER_DIR
-            REQUIRED
-    )
-    find_program(NUM_LLVM_COV_EXECUTABLE
-            NAMES llvm-cov
-            HINTS "${NUM_CLANG_BIN_DIR}"
-            NAMES_PER_DIR
-            REQUIRED
-    )
-
-    get_property(NUM_TEST_TARGETS GLOBAL PROPERTY NUM_TEST_TARGETS)
-    set(NUM_TEST_EXECUTABLES "")
-    foreach (target IN LISTS NUM_TEST_TARGETS)
-        list(APPEND NUM_TEST_EXECUTABLES "$<TARGET_FILE:${target}>")
-    endforeach ()
-
-    add_custom_target(coverage
-            COMMAND "${CMAKE_COMMAND}"
-            "-DNUM_COVERAGE_CTEST_EXECUTABLE=${CMAKE_CTEST_COMMAND}"
-            "-DNUM_COVERAGE_TEST_EXECUTABLES=${NUM_TEST_EXECUTABLES}"
-            "-DNUM_COVERAGE_LLVM_PROFDATA_EXECUTABLE=${NUM_LLVM_PROFDATA_EXECUTABLE}"
-            "-DNUM_COVERAGE_LLVM_COV_EXECUTABLE=${NUM_LLVM_COV_EXECUTABLE}"
-            "-DNUM_COVERAGE_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
-            "-DNUM_COVERAGE_BINARY_DIR=${PROJECT_BINARY_DIR}"
-            "-DNUM_COVERAGE_CONFIG=$<CONFIG>"
-            -P "${PROJECT_SOURCE_DIR}/cmake/coverage.cmake"
-            DEPENDS ${NUM_TEST_TARGETS}
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            USES_TERMINAL
-            VERBATIM
-            COMMENT "Running tests and generating coverage report"
-    )
-endif ()
-
 if (NUM_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif ()
 
 if (NUM_BUILD_DOCS)
-    find_package(Doxygen 1.9.5 REQUIRED)
-
-    include(FetchContent)
-    FetchContent_Declare(
-            doxygen-awesome-css
-            GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css.git
-            GIT_TAG v2.5.0
-    )
-    FetchContent_MakeAvailable(doxygen-awesome-css)
-    FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR NUM_DOXYGEN_AWESOME_CSS_DIR)
-
-    get_property(NUM_INCLUDE_DIRS GLOBAL PROPERTY NUM_INCLUDE_DIRS)
-
-    set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/docs")
-    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/docs/mainpage.md")
-    set(DOXYGEN_STRIP_FROM_INC_PATH ${NUM_INCLUDE_DIRS})
-    set(DOXYGEN_EXTRACT_ALL YES)
-    set(DOXYGEN_EXCLUDE_SYMBOLS "*::detail")
-    set(DOXYGEN_BRIEF_MEMBER_DESC NO)
-    set(DOXYGEN_SORT_MEMBER_DOCS NO)
-    set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
-    set(DOXYGEN_DOT_IMAGE_FORMAT svg)
-    set(DOXYGEN_HIDE_UNDOC_RELATIONS NO)
-    set(DOXYGEN_USE_MATHJAX YES)
-    set(DOXYGEN_MATHJAX_VERSION MathJax_3)
-    set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
-
-    set(DOXYGEN_HTML_EXTRA_STYLESHEET
-            "${NUM_DOXYGEN_AWESOME_CSS_DIR}/doxygen-awesome.css"
-            "${NUM_DOXYGEN_AWESOME_CSS_DIR}/doxygen-awesome-sidebar-only.css"
-    )
-    set(DOXYGEN_GENERATE_TREEVIEW YES)
-    set(DOXYGEN_DISABLE_INDEX NO)
-    set(DOXYGEN_FULL_SIDEBAR NO)
-    set(DOXYGEN_HTML_COLORSTYLE LIGHT)
-
-    doxygen_add_docs(docs
-            ${NUM_INCLUDE_DIRS}
-            "${PROJECT_SOURCE_DIR}/docs/groups.dox"
-            "${PROJECT_SOURCE_DIR}/docs/mainpage.md"
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            COMMENT "Generating API documentation"
-    )
+    add_subdirectory(docs)
 endif ()
