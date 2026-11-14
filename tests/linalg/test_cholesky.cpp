@@ -28,9 +28,8 @@ TEST(CholeskyDecompose, ComputesLowerFactor) {
 TEST(CholeskyDecompose, SatisfiesAEqualsLLt) {
     const auto matrix = spd_matrix();
     const auto decomposition = num::linalg::cholesky_decompose(matrix).value();
-    const auto product = decomposition.lower * decomposition.lower.transpose();
 
-    num::test::expect_matrix_near(product, matrix);
+    num::test::expect_matrix_near(decomposition.lower * decomposition.lower.transpose(), matrix);
 }
 
 TEST(CholeskyDecompose, ReturnsLowerTriangularFactor) {
@@ -42,9 +41,9 @@ TEST(CholeskyDecompose, ReturnsLowerTriangularFactor) {
 TEST(CholeskyDecompose, UsesOnlyLowerTriangle) {
     const num::Matrix<double> not_symmetric{{4.0, 100.0}, {1.0, 4.0}};
     const auto decomposition = num::linalg::cholesky_decompose(not_symmetric).value();
-    const auto product = decomposition.lower * decomposition.lower.transpose();
 
-    num::test::expect_matrix_near(product, num::Matrix<double>{{4.0, 1.0}, {1.0, 4.0}});
+    num::test::expect_matrix_near(decomposition.lower * decomposition.lower.transpose(),
+                                  num::Matrix<double>{{4.0, 1.0}, {1.0, 4.0}});
 }
 
 TEST(CholeskyDecompose, ReportsNonFiniteInput) {
