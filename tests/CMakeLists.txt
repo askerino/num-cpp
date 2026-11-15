@@ -27,7 +27,6 @@ function(num_add_test target library)
     )
     set_target_properties(${target} PROPERTIES COMPILE_WARNING_AS_ERROR ON)
     gtest_discover_tests(${target} TEST_PREFIX "${library}." PROPERTIES LABELS ${library})
-    set_property(GLOBAL APPEND PROPERTY NUM_TEST_TARGETS ${target})
 endfunction()
 
 num_add_test(num_core_tests core
@@ -45,8 +44,11 @@ num_add_test(num_linalg_tests linalg
 )
 
 if (NUM_ENABLE_COVERAGE)
-    get_property(NUM_TEST_TARGETS GLOBAL PROPERTY NUM_TEST_TARGETS)
     set(NUM_TEST_EXECUTABLES "")
+    set(NUM_TEST_TARGETS
+            num_core_tests
+            num_linalg_tests
+    )
     foreach (target IN LISTS NUM_TEST_TARGETS)
         list(APPEND NUM_TEST_EXECUTABLES "$<TARGET_FILE:${target}>")
     endforeach ()

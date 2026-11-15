@@ -14,14 +14,6 @@ option(NUM_ENABLE_SANITIZERS "Enable ASan + UBSan (Clang only)" OFF)
 option(NUM_ENABLE_COVERAGE "Enable code coverage (Clang only)" OFF)
 option(NUM_BUILD_DOCS "Build API documentation with Doxygen" OFF)
 
-function(num_add_library library)
-    set(include_dir "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    add_library(num_${library} INTERFACE)
-    add_library(num::${library} ALIAS num_${library})
-    target_include_directories(num_${library} INTERFACE "${include_dir}")
-    set_property(GLOBAL APPEND PROPERTY NUM_INCLUDE_DIRS "${include_dir}")
-endfunction()
-
 add_subdirectory(libs/core)
 add_subdirectory(libs/linalg)
 

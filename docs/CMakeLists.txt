@@ -9,7 +9,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR NUM_DOXYGEN_AWESOME_CSS_DIR)
 
-get_property(NUM_INCLUDE_DIRS GLOBAL PROPERTY NUM_INCLUDE_DIRS)
+set(NUM_INCLUDE_DIRS
+        "${PROJECT_SOURCE_DIR}/libs/core/include"
+        "${PROJECT_SOURCE_DIR}/libs/linalg/include"
+)
 
 set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/docs")
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/docs/mainpage.md")
