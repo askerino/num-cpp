@@ -27,6 +27,7 @@ if (NUM_ENABLE_SANITIZERS)
     if (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
         target_compile_options(num_project_options INTERFACE
                 -fsanitize=address,undefined
+                -fno-sanitize-recover=undefined
                 -fno-omit-frame-pointer
         )
         target_link_options(num_project_options INTERFACE
