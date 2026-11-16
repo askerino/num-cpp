@@ -224,13 +224,13 @@ cmake --build build/clang-debug
 
 #### ビルドオプション
 
-| オプション名            | 説明                                          | 初期値 |
-| ----------------------- | --------------------------------------------- | :----: |
-| `NUM_BUILD_TESTS`       | テストをビルドする                            | `ON`※  |
-| `NUM_BUILD_EXAMPLES`    | サンプルをビルドする                          | `ON`※  |
-| `NUM_ENABLE_SANITIZERS` | ASan + UBSanを有効にする（Clangのみ）         | `OFF`  |
-| `NUM_ENABLE_COVERAGE`   | コードカバレッジ計測を有効にする（Clangのみ） | `OFF`  |
-| `NUM_BUILD_DOCS`        | APIドキュメントを生成する（Doxygen）          | `OFF`  |
+| オプション名            | 説明                                               | 初期値 |
+| ----------------------- | -------------------------------------------------- | :----: |
+| `NUM_BUILD_TESTS`       | テストをビルドする                                 | `ON`※  |
+| `NUM_BUILD_EXAMPLES`    | サンプルをビルドする                               | `ON`※  |
+| `NUM_ENABLE_SANITIZERS` | ASan + UBSanを有効にする（GCC、Clang、AppleClang） | `OFF`  |
+| `NUM_ENABLE_COVERAGE`   | コードカバレッジ計測を有効にする（Clangのみ）      | `OFF`  |
+| `NUM_BUILD_DOCS`        | APIドキュメントを生成する（Doxygen）               | `OFF`  |
 
 ※他のプロジェクトから `FetchContent` などで取り込んだ場合、初期値は `OFF` になります。
 

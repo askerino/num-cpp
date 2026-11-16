@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(NUM_BUILD_TESTS "Build tests" ${PROJECT_IS_TOP_LEVEL})
 option(NUM_BUILD_EXAMPLES "Build examples" ${PROJECT_IS_TOP_LEVEL})
-option(NUM_ENABLE_SANITIZERS "Enable ASan + UBSan (Clang only)" OFF)
+option(NUM_ENABLE_SANITIZERS "Enable ASan + UBSan (GCC, Clang, or AppleClang)" OFF)
 option(NUM_ENABLE_COVERAGE "Enable code coverage (Clang only)" OFF)
 option(NUM_BUILD_DOCS "Build API documentation with Doxygen" OFF)
 
@@ -24,7 +24,7 @@ target_compile_options(num_project_options INTERFACE
 )
 
 if (NUM_ENABLE_SANITIZERS)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
         target_compile_options(num_project_options INTERFACE
                 -fsanitize=address,undefined
                 -fno-omit-frame-pointer
@@ -33,7 +33,7 @@ if (NUM_ENABLE_SANITIZERS)
                 -fsanitize=address,undefined
         )
     else ()
-        message(FATAL_ERROR "NUM_ENABLE_SANITIZERS requires Clang")
+        message(FATAL_ERROR "NUM_ENABLE_SANITIZERS requires GCC, Clang, or AppleClang")
     endif ()
 endif ()
 
