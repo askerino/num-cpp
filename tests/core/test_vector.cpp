@@ -1,8 +1,9 @@
 #include "num/core/vector.hpp"
 
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cmath>
-#include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
 #include <stdexcept>
