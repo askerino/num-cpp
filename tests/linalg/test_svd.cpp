@@ -5,8 +5,9 @@
 #include "num/linalg/svd.hpp"
 #include "support/comparison.hpp"
 
-#include <cmath>
 #include <gtest/gtest.h>
+
+#include <cmath>
 #include <limits>
 #include <stdexcept>
 

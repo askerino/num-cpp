@@ -6,6 +6,7 @@
 #include "support/comparison.hpp"
 
 #include <gtest/gtest.h>
+
 #include <limits>
 #include <numbers>
 #include <stdexcept>

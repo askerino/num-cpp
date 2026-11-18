@@ -2,10 +2,11 @@
 #include "num/core/vector.hpp"
 #include "support/comparison.hpp"
 
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
 #include <stdexcept>

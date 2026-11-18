@@ -4,8 +4,9 @@
 #include "num/linalg/eigen.hpp"
 #include "support/comparison.hpp"
 
-#include <cmath>
 #include <gtest/gtest.h>
+
+#include <cmath>
 #include <limits>
 #include <numbers>
 #include <stdexcept>

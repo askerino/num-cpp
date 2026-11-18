@@ -3,10 +3,11 @@
 #include "num/core/matrix.hpp"
 #include "num/core/vector.hpp"
 
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <gtest/gtest.h>
 #include <ranges>
 
 namespace num::test {
