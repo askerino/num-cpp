@@ -6,6 +6,7 @@ Checks: >
   modernize-*,
   readability-*,
   misc-include-cleaner,
+  -bugprone-easily-swappable-parameters,
   -modernize-use-trailing-return-type
 
 WarningsAsErrors: ""
@@ -32,7 +33,6 @@ CheckOptions:
   readability-identifier-naming.GlobalConstantCase: lower_case
   readability-identifier-naming.StaticConstantCase: lower_case
   readability-identifier-naming.GlobalVariableCase: lower_case
-  readability-identifier-naming.GlobalVariablePrefix: "g_"
   readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
 
   readability-identifier-length.IgnoredVariableNames: "^[a-z]$"

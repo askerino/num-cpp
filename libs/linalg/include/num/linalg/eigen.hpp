@@ -52,7 +52,6 @@ template <std::floating_point T>
 }
 
 template <std::floating_point T>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void rotate(Matrix<T>& a, Matrix<T>& eigenvectors, std::size_t p, std::size_t q) {
     const T a_pp = a(p, p);
     const T a_qq = a(q, q);
