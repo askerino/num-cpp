@@ -67,7 +67,6 @@ struct ColumnGram {
 };
 
 template <std::floating_point T>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 [[nodiscard]] ColumnGram<T> column_gram(const Matrix<T>& matrix, std::size_t p, std::size_t q) {
     ColumnGram<T> gram{};
     for (std::size_t i = 0; i < matrix.rows(); ++i) {
@@ -164,7 +163,6 @@ void sort_singular_triplets(Matrix<T>& u, Vector<T>& s, Matrix<T>& v) {
 }
 
 template <std::floating_point T>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void orient_columns(Matrix<T>& u, Matrix<T>& v) {
     for (std::size_t k = 0; k < u.cols(); ++k) {
         const auto magnitude = [&u, k](std::size_t i) { return std::abs(u(i, k)); };

@@ -17,7 +17,6 @@ struct Rotation {
 
 /// @pre @p gamma must not be zero.
 template <std::floating_point T>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 [[nodiscard]] Rotation<T> make_rotation(T alpha, T beta, T gamma) {
     const T tau = (beta - alpha) / (T{2} * gamma);
     const T t =
@@ -27,7 +26,6 @@ template <std::floating_point T>
 }
 
 template <std::floating_point T>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void rotate_columns(Matrix<T>& matrix, std::size_t p, std::size_t q, const Rotation<T>& rotation) {
     for (std::size_t i = 0; i < matrix.rows(); ++i) {
         const T a_ip = matrix(i, p);
