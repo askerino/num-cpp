@@ -23,6 +23,7 @@ struct QrDecomposition {
     Matrix<T> r;
 };
 
+/// @note @p matrix is reported as rank deficient only when r_jj is exactly zero.
 /// @return The decomposition, or an error if @p matrix is rank deficient or contains a non-finite
 /// value.
 /// @throws std::invalid_argument If @p matrix is empty or has fewer rows than columns.

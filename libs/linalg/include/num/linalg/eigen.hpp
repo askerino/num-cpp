@@ -120,6 +120,7 @@ void orient_eigenvectors(Matrix<T>& eigenvectors) {
 
 } // namespace detail::eigen
 
+/// @note Symmetry is checked exactly, as in num::Matrix::is_symmetric().
 /// @return The decomposition, or an error if @p matrix is not symmetric, contains a non-finite
 /// value, or the iteration does not converge.
 /// @throws std::invalid_argument If @p matrix is empty or non-square, or @p tolerance is not

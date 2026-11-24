@@ -47,6 +47,7 @@ template <std::floating_point T>
 
 } // namespace detail::lu
 
+/// @note @p matrix is reported as singular only when a pivot is exactly zero.
 /// @return The decomposition, or an error if @p matrix is singular or contains a non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
 template <std::floating_point T>

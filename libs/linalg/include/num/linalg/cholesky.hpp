@@ -34,6 +34,8 @@ template <std::floating_point T>
 
 } // namespace detail::cholesky
 
+/// @note Only the lower triangle of @p matrix is read; its symmetry is not checked.
+/// @note @p matrix is reported as not positive definite only when l_jj^2 <= 0 exactly.
 /// @return The decomposition, or an error if @p matrix is not positive definite or contains a
 /// non-finite value.
 /// @throws std::invalid_argument If @p matrix is empty or non-square.
