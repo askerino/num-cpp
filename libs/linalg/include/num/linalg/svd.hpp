@@ -252,6 +252,7 @@ svd_decompose(const Matrix<T>& matrix,
     return SvdDecomposition<T>{std::move(u), std::move(s), std::move(v)};
 }
 
+/// @note Singular values at most max(m, n) * epsilon * s_0 are treated as zero.
 template <std::floating_point T>
 [[nodiscard]] std::size_t svd_rank(const SvdDecomposition<T>& decomposition) {
     const T threshold = detail::svd::rank_threshold(decomposition);
@@ -259,6 +260,7 @@ template <std::floating_point T>
         std::ranges::count_if(decomposition.s, [threshold](T value) { return value > threshold; }));
 }
 
+/// @note Singular values at most max(m, n) * epsilon * s_0 are treated as zero.
 /// @return The least-squares solution, or an error if @p rhs contains a non-finite
 /// value.
 /// @throws std::invalid_argument If @p rhs has an incompatible size.
@@ -284,6 +286,7 @@ svd_least_squares(const SvdDecomposition<T>& decomposition, const Vector<T>& rhs
     return solution;
 }
 
+/// @note Singular values at most max(m, n) * epsilon * s_0 are treated as zero.
 template <std::floating_point T>
 [[nodiscard]] Matrix<T> svd_pseudo_inverse(const SvdDecomposition<T>& decomposition) {
     const std::size_t m = decomposition.u.rows();
@@ -307,6 +310,7 @@ template <std::floating_point T>
     return inverse;
 }
 
+/// @note Returns infinity if the smallest singular value is at most max(m, n) * epsilon * s_0.
 template <std::floating_point T>
 [[nodiscard]] T svd_condition_number(const SvdDecomposition<T>& decomposition) {
     const T s_min = decomposition.s[decomposition.s.size() - 1];
