@@ -26,13 +26,13 @@ namespace num::linalg {
 
 template <std::floating_point T>
 struct SvdDecomposition {
-    /// @brief Matrix whose orthonormal columns are the left singular vectors, with the
-    /// largest-magnitude component of each column positive.
+    /// Matrix whose orthonormal columns are the left singular vectors, with the largest-magnitude
+    /// component of each column positive.
     Matrix<T> u;
-    /// @brief Singular values sorted in descending order.
+    /// Singular values sorted in descending order.
     Vector<T> s;
-    /// @brief Matrix whose orthonormal columns are the right singular vectors, with each column's
-    /// sign chosen in tandem with @c u.
+    /// Matrix whose orthonormal columns are the right singular vectors, with each column's sign
+    /// chosen in tandem with @c u.
     Matrix<T> v;
 };
 
@@ -61,9 +61,12 @@ template <std::floating_point T>
 
 template <std::floating_point T>
 struct ColumnGram {
-    T alpha; ///< Squared norm of the first column.
-    T beta;  ///< Squared norm of the second column.
-    T gamma; ///< Dot product of the two columns.
+    /// Squared norm of the first column.
+    T alpha;
+    /// Squared norm of the second column.
+    T beta;
+    /// Dot product of the two columns.
+    T gamma;
 };
 
 template <std::floating_point T>
