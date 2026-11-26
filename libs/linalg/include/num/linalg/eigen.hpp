@@ -25,9 +25,11 @@ namespace num::linalg {
 
 template <std::floating_point T>
 struct EigenDecomposition {
-    Vector<T> values;  ///< Eigenvalues sorted in ascending order.
-    Matrix<T> vectors; ///< Orthogonal matrix whose columns are eigenvectors, with the
-                       ///< largest-magnitude component of each eigenvector positive.
+    /// Eigenvalues sorted in ascending order.
+    Vector<T> values;
+    /// Orthogonal matrix whose columns are eigenvectors, with the largest-magnitude component of
+    /// each eigenvector positive.
+    Matrix<T> vectors;
 };
 
 namespace detail::eigen {

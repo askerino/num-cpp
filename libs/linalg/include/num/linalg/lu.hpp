@@ -26,7 +26,8 @@ template <std::floating_point T>
 struct LuDecomposition {
     Matrix<T> lower;
     Matrix<T> upper;
-    std::vector<std::size_t> permutation; ///< Row `i` of `PA` is row `permutation[i]` of `A`.
+    /// Row `i` of `PA` is row `permutation[i]` of `A`.
+    std::vector<std::size_t> permutation;
     std::size_t row_swaps{};
 };
 
