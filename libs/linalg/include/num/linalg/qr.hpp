@@ -6,6 +6,7 @@
 #include "num/linalg/detail/triangular.hpp"
 #include "num/linalg/detail/validation.hpp"
 
+#include <cmath>
 #include <concepts>
 #include <cstddef>
 #include <expected>
@@ -20,10 +21,40 @@ namespace num::linalg {
 template <std::floating_point T>
 struct QrDecomposition {
     Matrix<T> q;
+    /// Upper triangular factor. Diagonal entries may be negative.
     Matrix<T> r;
 };
 
-/// @note @p matrix is reported as rank deficient only when r_jj is exactly zero.
+namespace detail::qr {
+
+// Assumes r_kk is already sign-adjusted to avoid cancellation.
+template <std::floating_point T>
+[[nodiscard]] Vector<T> householder_vector(const Matrix<T>& a, std::size_t k, T r_kk) {
+    Vector<T> v(a.rows());
+    for (std::size_t i = k; i < a.rows(); ++i) {
+        v[i] = a(i, k);
+    }
+    v[k] -= r_kk;
+    v /= v.norm_l2();
+    return v;
+}
+
+// H = I - 2 v v^T
+template <std::floating_point T>
+[[nodiscard]] Matrix<T> householder_matrix(const Vector<T>& v) {
+    const std::size_t m = v.size();
+    Matrix<T> h = Matrix<T>::identity(m);
+    for (std::size_t i = 0; i < m; ++i) {
+        for (std::size_t j = 0; j < m; ++j) {
+            h(i, j) -= T{2} * v[i] * v[j];
+        }
+    }
+    return h;
+}
+
+} // namespace detail::qr
+
+/// @note @p matrix is reported as rank deficient only when r_kk is exactly zero.
 /// @return The decomposition, or an error if @p matrix is rank deficient or contains a non-finite
 /// value.
 /// @throws std::invalid_argument If @p matrix is empty or has fewer rows than columns.
@@ -36,31 +67,46 @@ template <std::floating_point T>
 
     const std::size_t m = matrix.rows();
     const std::size_t n = matrix.cols();
-    Matrix<T> q(m, n);
+    Matrix<T> a = matrix;
+    Matrix<T> q = Matrix<T>::identity(m);
+
+    for (std::size_t k = 0; k < n; ++k) {
+        const T a_kk = a(k, k);
+        T sigma{};
+        for (std::size_t i = k + 1; i < m; ++i) {
+            sigma = std::hypot(sigma, a(i, k));
+        }
+
+        if (sigma == T{}) {
+            if (a_kk == T{}) {
+                return std::unexpected(Error::rank_deficient);
+            }
+            continue;
+        }
+
+        // The sign opposite to a_kk avoids cancellation in v_k = a_kk - r_kk.
+        const T r_kk = -std::copysign(std::hypot(a_kk, sigma), a_kk);
+        const Vector<T> v = detail::qr::householder_vector(a, k, r_kk);
+        const Matrix<T> h = detail::qr::householder_matrix(v);
+        q = q * h;
+        a = h * a;
+    }
+
+    // Copy upper triangle only; entries of a below the diagonal are rounding errors.
+    Matrix<T> thin_q(m, n);
+    for (std::size_t i = 0; i < m; ++i) {
+        for (std::size_t j = 0; j < n; ++j) {
+            thin_q(i, j) = q(i, j);
+        }
+    }
     Matrix<T> r(n, n);
-
-    for (std::size_t j = 0; j < n; ++j) {
-        Vector<T> v = matrix.column(j);
-
-        for (std::size_t k = 0; k < j; ++k) {
-            const auto q_k = q.column(k);
-            const T r_kj = q_k.dot(v);
-            r(k, j) = r_kj;
-            v -= r_kj * q_k;
-        }
-
-        const T r_jj = v.norm_l2();
-        if (r_jj == T{}) {
-            return std::unexpected(Error::rank_deficient);
-        }
-        r(j, j) = r_jj;
-
-        for (std::size_t i = 0; i < m; ++i) {
-            q(i, j) = v[i] / r_jj;
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t j = i; j < n; ++j) {
+            r(i, j) = a(i, j);
         }
     }
 
-    return QrDecomposition<T>{std::move(q), std::move(r)};
+    return QrDecomposition<T>{std::move(thin_q), std::move(r)};
 }
 
 /// @return The least-squares solution, or an error if @p rhs contains a non-finite value.

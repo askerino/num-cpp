@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <limits>
 #include <numbers>
 #include <stdexcept>
@@ -16,6 +17,21 @@ num::Matrix<double> square_matrix() {
     return {{2.0, 1.0, -1.0}, {1.0, 3.0, 2.0}, {3.0, -1.0, 1.0}};
 }
 num::Matrix<double> tall_matrix() { return {{1.0, 0.0}, {1.0, 1.0}, {1.0, 2.0}}; }
+
+num::Matrix<double> vandermonde_matrix() {
+    constexpr std::size_t m = 20;
+    constexpr std::size_t n = 10;
+    num::Matrix<double> matrix(m, n);
+    for (std::size_t i = 0; i < m; ++i) {
+        const double x = static_cast<double>(i) / static_cast<double>(m - 1);
+        double power = 1.0;
+        for (std::size_t j = 0; j < n; ++j) {
+            matrix(i, j) = power;
+            power *= x;
+        }
+    }
+    return matrix;
+}
 } // namespace
 
 TEST(QrDecompose, ComputesKnownFactors) {
@@ -25,8 +41,9 @@ TEST(QrDecompose, ComputesKnownFactors) {
     const double sqrt2 = std::numbers::sqrt2;
 
     num::test::expect_matrix_near(
-        decomposition.q, num::Matrix<double>{{inv_sqrt2, inv_sqrt2}, {inv_sqrt2, -inv_sqrt2}});
-    num::test::expect_matrix_near(decomposition.r, num::Matrix<double>{{sqrt2, 0.0}, {0.0, sqrt2}});
+        decomposition.q, num::Matrix<double>{{-inv_sqrt2, -inv_sqrt2}, {-inv_sqrt2, inv_sqrt2}});
+    num::test::expect_matrix_near(decomposition.r,
+                                  num::Matrix<double>{{-sqrt2, 0.0}, {0.0, -sqrt2}});
 }
 
 TEST(QrDecompose, SatisfiesAEqualsQR) {
@@ -39,6 +56,12 @@ TEST(QrDecompose, SatisfiesAEqualsQR) {
 TEST(QrDecompose, ReturnsOrthonormalColumns) {
     const auto matrix = square_matrix();
     const auto decomposition = num::linalg::qr_decompose(matrix).value();
+
+    num::test::expect_orthonormal_columns(decomposition.q);
+}
+
+TEST(QrDecompose, ReturnsOrthonormalColumnsForIllConditionedMatrices) {
+    const auto decomposition = num::linalg::qr_decompose(vandermonde_matrix()).value();
 
     num::test::expect_orthonormal_columns(decomposition.q);
 }
@@ -111,12 +134,12 @@ TEST(QrDecompose, SupportsFloat) {
     const num::Matrix<float> matrix{{3.0F, 0.0F}, {4.0F, 5.0F}};
     const auto decomposition = num::linalg::qr_decompose(matrix).value();
 
-    EXPECT_NEAR(decomposition.q(0, 0), 0.6F, num::test::float_tolerance);
-    EXPECT_NEAR(decomposition.q(1, 0), 0.8F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.q(0, 0), -0.6F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.q(1, 0), -0.8F, num::test::float_tolerance);
     EXPECT_NEAR(decomposition.q(0, 1), -0.8F, num::test::float_tolerance);
     EXPECT_NEAR(decomposition.q(1, 1), 0.6F, num::test::float_tolerance);
-    EXPECT_NEAR(decomposition.r(0, 0), 5.0F, num::test::float_tolerance);
-    EXPECT_NEAR(decomposition.r(0, 1), 4.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.r(0, 0), -5.0F, num::test::float_tolerance);
+    EXPECT_NEAR(decomposition.r(0, 1), -4.0F, num::test::float_tolerance);
     EXPECT_NEAR(decomposition.r(1, 1), 3.0F, num::test::float_tolerance);
 }
 
@@ -136,6 +159,16 @@ TEST(QrLeastSquares, SolvesOverdeterminedSystem) {
     const auto solution = num::linalg::qr_least_squares(decomposition, rhs).value();
 
     num::test::expect_vector_near(solution, num::Vector<double>{7.0 / 6.0, 0.5});
+}
+
+TEST(QrLeastSquares, SolvesIllConditionedSystem) {
+    const auto matrix = vandermonde_matrix();
+    const num::Vector<double> ones{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    const auto rhs = matrix * ones;
+    const auto decomposition = num::linalg::qr_decompose(matrix).value();
+    const auto solution = num::linalg::qr_least_squares(decomposition, rhs).value();
+
+    num::test::expect_vector_near(solution, ones, 1e-8);
 }
 
 TEST(QrLeastSquares, MatchesLuSolve) {
